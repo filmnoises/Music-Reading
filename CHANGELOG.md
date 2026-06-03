@@ -9,24 +9,187 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- **v0.2.0** — Add A minor (relative minor of C major). Both share
-  the no-accidentals key signature; pairing them in the app teaches
-  the relative-major/minor relationship at the simplest level.
-- **v0.3.0** — Add F major and D minor (one flat each, a relative
-  pair). Introduces the flat side of the circle of fifths.
-- **v0.4.0** — Add D major and B minor (two sharps).
-- **v0.5.0** — Add B♭ major and G minor (two flats).
+- **v0.3.0** — Add D major and B minor (two sharps). Continue climbing
+  the sharp side of the circle of fifths.
+- **v0.4.0** — Open the flat side: F major and D minor (one flat).
 - Additional levels beyond Level 1 (intervals): triads, seventh
   chords, scales — mirroring the level progression in Ear Trainer.
-- Light-touch integration with Ear Trainer (Pattern B from the
-  planning conversation): potentially a "see this interval on the
-  staff →" cross-link when a user gets an Ear Trainer interval right
-  or wrong, that opens Music Reading with the same interval pre-loaded.
-  Deferred until both apps have a few releases under their belts.
-- Mobile-friendly layout review (the app is usable on tablets and
-  phones but hasn't been deliberately optimized for those sizes).
-- Save settings (clef, key, mode, activity) to localStorage so they
-  persist across sessions.
+- Light-touch integration with Ear Trainer: a "see this interval on
+  the staff →" cross-link when a user gets an Ear Trainer interval
+  right or wrong. Deferred until both apps have a few releases.
+- Mobile-friendly layout review.
+- Save settings to localStorage so they persist across sessions.
+
+---
+
+## [0.2.0] — 2026-06-03
+
+Major feature release. Expands the key library to the full circle of
+fifths, replaces the hardcoded exercise list with a dynamic generator,
+adds a Note Reference panel for beginners, and introduces interval and
+direction filters for both Learn and Quiz modes. Visual style aligned
+with the Ear Trainer dark studio aesthetic.
+
+### Added — visual style
+
+- **Dark studio aesthetic** matching the Ear Trainer: near-black
+  `#14110f` background, brass `#d4a24c` accent, Fraunces serif for
+  display text, JetBrains Mono for labels and data.
+- **White-background staff panels** — VexFlow renders black-on-white
+  naturally; a `patchSvgBackground()` helper injects a white rect as
+  the SVG's first child so ledger lines and note stems render correctly
+  without any CSS color overrides that would interfere with VexFlow's
+  internal rendering.
+- `overflow: visible` on all staff SVGs so notes on ledger lines above
+  or below the staff are never clipped.
+
+### Added — key signatures
+
+- **Circle of fifths key grid** — all 14 keys now available, arranged
+  in circle of fifths order left to right: C, G, D, A, E (sharps side)
+  then F, B♭ (flats side). Each major key is paired with its relative
+  minor directly below it — they share a key signature.
+- Keys available: C major / A minor, G major / E minor, D major /
+  B minor, A major / F♯ minor, E major / C♯ minor, F major / D minor,
+  B♭ major / G minor.
+
+### Added — clef
+
+- **Both clef** — shows the grand staff (treble on top, bass below),
+  the view pianists read from. Audio plays the treble-clef octave; a
+  note below the staff explains that the bass staff shows the same
+  interval one octave lower.
+
+### Added — Note Reference panel
+
+- Collapsible **Note Reference** panel below the controls shows every
+  natural note on both treble and bass staves with letter-name labels.
+  Ledger-line notes are labeled in gold to call them out. Intended as
+  a visual guide for absolute beginners learning to orient on the staff.
+
+### Added — exercise controls
+
+- **Interval filter** — new Row 3 in controls. Buttons: All · m2 ·
+  M2 · m3 · M3 · P4 · TT · P5 · m6 · M6 · m7 · M7 · P8. Selecting
+  a specific interval locks both Learn and Quiz to that interval.
+- **Direction toggle** — Ascending / Descending / Both. Defaults to
+  Ascending. Wired into both exercise generators; selecting Descending
+  means all exercises will descend.
+
+### Changed — exercise generation
+
+- Learn mode now uses the same dynamic generator as Quiz mode
+  (`generateLearnExercise()`), replacing a hardcoded exercise array.
+  Changing any control (key, clef, interval, direction, mode) now
+  immediately generates a correctly matching exercise rather than
+  cycling through a fixed list.
+- Expanded note ranges: treble A3–C6 (A below middle C up to two
+  ledger lines above the staff); bass C2–E4 (two ledger lines below
+  through E above middle C).
+
+### Changed — descending perfect intervals
+
+- **Renamed "Mode A / Mode B"** to **"Root Relative" / "Exact
+  Distance"** throughout the app. The old names were opaque; the new
+  names communicate the concept directly.
+  - **Root Relative** — the descending note is the same letter name as
+    ascending. C down a P5 = G. The interval inverts but stays in key.
+    Good for sight-singing and beginners.
+  - **Exact Distance** — count down the exact semitones. C down a P5
+    (7 semitones) = F. Used for Circle of Fifths and chord-progression
+    thinking.
+- Control label changed to "Descending Perfect Intervals (see below)"
+  with a plain-language explanation strip below the toggle.
+- Quick Reference panel below the exercise card updated to match new
+  language; "Mode A vs. Mode B" heading removed.
+- User Manual section rewritten with proper theory explanation of
+  interval inversion (Root Relative) and semitone distance (Exact
+  Distance).
+
+### Fixed
+
+- Reveal Notes panel was reading interval name from the old hardcoded
+  `exercises[]` array (`exercises[currentIndex]`) rather than the live
+  `currentLearnEx` object. Now correctly shows the interval name of
+  the exercise actually on screen.
+- Mode label in reveal panel updated from "Mode A / Mode B" to "Root
+  Relative / Exact Distance".
+
+### Files in this release
+
+- `index.html` — full app (single file)
+- `README.md` — updated for v0.2.0
+- `CHANGELOG.md` — this file
+- `release.sh` — unchanged
+
+### What to test in v0.2.0
+
+**Style and rendering**
+- [ ] Dark background, brass accent color, Fraunces/JetBrains Mono
+  fonts load correctly.
+- [ ] Staff renders black-on-white. Notes, stems, ledger lines, clef
+  symbol, and key signature accidentals are all clearly visible.
+- [ ] Notes on ledger lines above and below the staff are fully visible
+  and not clipped (e.g. C4 below treble, high C6 above treble).
+
+**Key grid**
+- [ ] All 14 key buttons present and labeled correctly.
+- [ ] Switching to G major shows one sharp on the staff; root note is G.
+- [ ] Switching to E minor shows the same one sharp; root is E.
+- [ ] Switching to B♭ major shows two flats; root is B♭.
+- [ ] Only one key button is active (gold) at a time.
+
+**Clef — Both**
+- [ ] Select Both; grand staff renders with treble on top, bass below.
+- [ ] Explanation note appears below the staff explaining audio plays
+  treble-clef octave.
+- [ ] Switching back to Treble or Bass removes the explanation note.
+
+**Note Reference panel**
+- [ ] Panel is present and collapsible.
+- [ ] Treble staff shows notes C4 through A5 with letter names.
+- [ ] Bass staff shows notes E2 through C4 with letter names.
+- [ ] Ledger-line note labels appear in gold.
+
+**Interval filter**
+- [ ] All · m2 · M2 … P8 buttons all present.
+- [ ] Selecting P5 in Learn mode generates only Perfect 5th exercises.
+- [ ] Selecting P5 in Quiz mode generates only Perfect 5th questions.
+- [ ] Returning to All restores full random pool.
+
+**Direction toggle**
+- [ ] Ascending-only: all exercises go up.
+- [ ] Descending-only: all exercises go down.
+- [ ] Both: mix of ascending and descending appears over several
+  exercises.
+- [ ] Direction toggle interacts correctly with interval filter
+  (e.g. P5 + Descending = descending P5 exercises only).
+
+**Root Relative / Exact Distance**
+- [ ] Toggle is labeled "Root Relative" and "Exact Distance" — no
+  "Mode A" or "Mode B" anywhere in the UI.
+- [ ] With Descending + P5 from C selected:
+  - Root Relative: second note is G below.
+  - Exact Distance: second note is F below.
+- [ ] Toggle has no effect on non-perfect descending intervals.
+- [ ] Quick Reference panel below exercise uses new language.
+
+**Reveal Notes (Learn mode)**
+- [ ] Reveal shows the correct interval name matching what is on screen
+  (not a name from a different exercise).
+- [ ] Descending perfect interval reveals show "(Root Relative)" or
+  "(Exact Distance)" correctly.
+
+**Quiz mode**
+- [ ] Quiz still functions: correct answer highlights green, wrong
+  highlights red, three attempts then reveal.
+- [ ] Interval filter and direction filter both affect quiz questions.
+
+**Accessibility**
+- [ ] Tab through all controls; focus ring visible on each.
+- [ ] Direction toggle and interval filter buttons all have correct
+  `aria-pressed` states.
+- [ ] Screen reader announces control labels correctly.
 
 ---
 
@@ -54,11 +217,11 @@ to GitHub Pages as a sibling to the existing Ear Trainer.
   alone (melodic), beat 3 is the two notes sounded together (harmonic).
   This mirrors how a musician would practice an interval at an
   instrument.
-- **Mode A vs. Mode B toggle for descending perfect intervals.** Two
-  legitimate conceptual models for descending P4, P5, and octave —
-  letter-name-matching (Mode A) and interval-distance (Mode B). Both
-  are taught in real music education; the app lets the student choose
-  which to practice.
+- **Root Relative / Exact Distance toggle for descending perfect
+  intervals.** Two legitimate conceptual models for descending P4, P5,
+  and octave. Both are taught in real music education; the app lets
+  the student choose which to practice. (Originally shipped as
+  "Mode A / Mode B"; renamed in v0.2.0.)
 - **Salamander Grand Piano sample playback** via Tone.js. Same audio
   stack as Ear Trainer, with the expanded 30-sample set (every minor
   third from A0 to C8) for low pitch-shift artifacts.
@@ -66,11 +229,8 @@ to GitHub Pages as a sibling to the existing Ear Trainer.
 ### Added — first-run pedagogy
 
 - **Embedded User Manual** as a collapsible `<details>` block at the
-  top of the page, covering all the music theory a learner needs to
-  understand the exercises: clefs, note durations, time signatures,
-  sharps and flats, key signatures, intervals, the Mode A / Mode B
-  distinction, exercise structure, range, and attribution.
-- **Mode A vs. Mode B reference panel** that stays open by default,
+  top of the page.
+- **Descending interval reference panel** that stays open by default,
   showing a concrete example of how the two modes differ. Collapsible.
 
 ### Added — accessibility
@@ -89,95 +249,14 @@ to GitHub Pages as a sibling to the existing Ear Trainer.
 
 - Sample loading begins automatically on page load. The audio context
   is resumed on the first user interaction (click, keydown, or
-  touchstart), as required by browser autoplay policies. The status
-  banner shows "Loading piano samples…" then "Ready" and auto-hides.
-  No explicit "Enable Audio" button — the app gets out of the user's
-  way once they're ready to start.
+  touchstart), as required by browser autoplay policies.
 
 ### Added — attribution
 
 - Visible attribution block lists Salamander Grand Piano (CC-BY 3.0),
-  Tone.js (MIT), and VexFlow (MIT) — the third-party work this app
-  builds on. CC-BY 3.0 requires this visibility for the piano samples;
-  the MIT licenses don't strictly require it but it's good manners.
-- Sister-app footer link to Ear Trainer makes the relationship
-  between the two apps discoverable to first-time visitors.
-
-### Files included in this release
-
-- `index.html` — the entire app, including styles and scripts (single
-  file by design, like Ear Trainer)
-- `README.md` — repository home page on GitHub
-- `CHANGELOG.md` — this file
-- `release.sh` — release helper script (parallel to Ear Trainer's)
-
-### What to test in v0.1.0
-
-A checklist for testers to verify before declaring the release good.
-Copy into a tracker and check off as each is verified.
-
-**Basic interaction**
-- [ ] Open the live site; "Loading piano samples…" banner appears,
-  then "Ready" message, then banner disappears.
-- [ ] Press Play on the first exercise; you hear the three-beat
-  sequence (root, second note, harmonic) on a real piano sound.
-- [ ] Click Next; a new exercise loads on the staff with title and
-  prompt updated.
-- [ ] Click Previous; you go back to the prior exercise.
-
-**Clef switching**
-- [ ] Toggle Bass Clef; the staff redraws in bass clef, the audio
-  plays in a lower octave.
-- [ ] Toggle back to Treble; staff redraws.
-
-**Key switching**
-- [ ] Switch to G major; key signature shows one sharp; exercises
-  are now rooted on G.
-- [ ] Switch to E minor; key signature still shows one sharp; tonic
-  is now E. A "Major 3rd ascending" from E lands on G♯ (because
-  the key sig is G major). A "Minor 3rd ascending" from E lands on
-  G natural.
-- [ ] Switch back to C major; no accidentals; tonic back to C.
-
-**Mode A vs. Mode B (perfect intervals only)**
-- [ ] Find a descending perfect-interval exercise (P4, P5, or octave).
-- [ ] Toggle Mode A; second note descends to the same letter name.
-- [ ] Toggle Mode B; second note descends by interval distance.
-- [ ] Toggle for a *non*-perfect descending interval (m2, M3, etc.);
-  the toggle has no effect — the exercise is the same in both modes.
-
-**Quiz mode**
-- [ ] Switch to Quiz activity; the second note shows as a question mark.
-- [ ] Click the correct note name; button highlights green; audio
-  plays the note you picked; status says "Correct."
-- [ ] Click a wrong note name; button highlights red; you hear the
-  note you picked; status says "Not quite — that was [name]. X
-  attempts left."
-- [ ] After 3 wrong attempts, the correct answer is revealed, the
-  original exercise replays, and you cannot click any more buttons
-  for this question.
-
-**Accessibility**
-- [ ] Tab through every control on the page; focus indicator is
-  clearly visible on each.
-- [ ] On screen reader, all controls announce sensible labels.
-- [ ] The User Manual `<details>` expands and collapses with keyboard.
-- [ ] The audio status banner announces its state changes
-  (loading / ready) via `aria-live`.
-
-**Manual / attribution**
-- [ ] Open the User Manual; all sections render correctly.
-- [ ] About Accessibility section is present, with link to Ear Trainer.
-- [ ] Audio & Attribution lists Salamander, Tone.js, and VexFlow with
-  working external links.
-- [ ] Footer "Sister app: Ear Trainer →" link works.
-
-**Sister app discoverability**
-- [ ] Visit Ear Trainer's live site too; verify cross-link from this
-  app reaches the right place. (Note: Ear Trainer doesn't yet have a
-  reciprocal cross-link to Music Reading; that's a separate small
-  edit to ship in Ear Trainer's next release.)
+  Tone.js (MIT), and VexFlow (MIT).
+- Sister-app footer link to Ear Trainer.
 
 ---
 
-(No prior entries — this is the first release.)
+(End of changelog.)

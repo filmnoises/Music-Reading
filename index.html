@@ -1,241 +1,421 @@
 <!DOCTYPE html>
 <!--
-  Music Reading Trainer · v0.1.0 · 2026-05-17
-  First public release. A browser-based sight-reading trainer:
-  shows intervals on the staff in real keys (C major, G major,
-  E minor), with both Learn and Quiz modes. Audio playback via
-  Tone.js + Salamander Grand Piano samples — the same audio stack
-  as the sister app Ear Trainer.
-
-  Pedagogical companion to Ear Trainer (filmnoises.github.io/Ear-Training/).
-  Ear Trainer teaches "what does an interval sound like, abstracted
-  from key"; Music Reading Trainer teaches "what does an interval
-  look like and sound like, embedded in key context." The skills
-  braid together.
-
-  This release covers Level 1 (intervals) in three keys. Future
-  releases will expand the key library along the circle of fifths,
-  one major/minor pair at a time, plus additional levels.
-
-  See CHANGELOG.md section [0.1.0] for full notes.
+  Music Reading Trainer · v0.2.0 · 2026-06-03
+  Restyled to match Ear Trainer dark studio aesthetic (brass/near-black).
+  Layout: Activity + Mode controls top row; Clef + Key (circle of fifths
+  pairs) below. Clef adds "Both" option. New Note Reference panel shows
+  labeled note names on treble and bass staves for absolute beginners.
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Music Reading Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
 <style>
   :root {
-    --bg: #f7f3ec;
-    --ink: #1a1a1a;
-    --accent: #2c5f7c;
-    --accent-warm: #c14d3e;
-    --muted: #6b6357;
-    --paper: #ffffff;
-    --border: #d9d3c6;
-    --soft: #efeadd;
-    --focus: #2c5f7c;
+    --bg:        #14110f;
+    --surface:   #1e1a17;
+    --surface2:  #252018;
+    --border:    #5a4e3c;
+    --border2:   #6a5c48;
+    --accent:    #d4a24c;
+    --accent-dim:#b8882e;
+    --ink:       #f0e8d8;
+    --ink-dim:   #d0c4b0;
+    --ink-mute:  #9a8c7c;
+    --green:     #5a8a4e;
+    --green-bg:  #1a2e18;
+    --green-ink: #b8d4b0;
+    --red:       #a04040;
+    --red-bg:    #2e1818;
+    --red-ink:   #d4a0a0;
+    --gold-bg:   #2a2010;
+    --gold-ink:  #d4b870;
+    --focus:     #d4a24c;
+    --r:         2px;
   }
-  * { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    margin: 0;
-    padding: 1.5rem 1rem 3rem;
-    font-family: Georgia, 'Times New Roman', serif;
     background: var(--bg);
     color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 16px;
     line-height: 1.55;
+    padding: 1.5rem 1rem 4rem;
   }
-  .container { max-width: 960px; margin: 0 auto; }
+  .container { max-width: 980px; margin: 0 auto; }
 
-  header { margin-bottom: 1.5rem; }
-  h1 {
-    font-size: 1.85rem;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    margin: 0 0 0.25rem;
+  /* ── HEADER ── */
+  header {
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
   }
-  .subtitle {
-    color: var(--muted);
-    font-style: italic;
-    margin: 0;
-    font-size: 0.95rem;
+  h1 { font-size: 2rem; font-weight: 300; letter-spacing: 0.03em; margin-bottom: 0.2rem; }
+  h1 em { color: var(--accent); font-style: normal; }
+  .subtitle { color: var(--ink-dim); font-style: italic; font-size: 0.95rem; font-weight: 300; }
+
+  /* ── SKIP LINK ── */
+  .skip-link {
+    position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+  }
+  .skip-link:focus {
+    position: static; width: auto; height: auto;
+    background: var(--accent); color: #14110f; padding: 0.4rem 0.8rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+    display: inline-block; margin-bottom: 0.5rem;
   }
 
+  /* ── DETAILS / SUMMARY ── */
   details {
-    background: var(--paper);
+    background: var(--surface);
     border: 1px solid var(--border);
-    margin-bottom: 1rem;
-    padding: 0;
+    margin-bottom: 0.75rem;
   }
   details > summary {
     list-style: none;
     cursor: pointer;
-    padding: 0.85rem 1.25rem;
+    padding: 0.8rem 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     color: var(--accent);
-    background: var(--soft);
-    border-bottom: 1px solid transparent;
-    user-select: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    user-select: none;
+    border-bottom: 1px solid transparent;
   }
   details[open] > summary { border-bottom-color: var(--border); }
-  details > summary::after {
-    content: "+";
-    font-size: 1.3rem;
-    line-height: 1;
-    color: var(--muted);
-  }
+  details > summary::after { content: "+"; font-size: 1.2rem; color: var(--ink-mute); line-height: 1; }
   details[open] > summary::after { content: "−"; }
   details > summary::-webkit-details-marker { display: none; }
   details > summary:focus { outline: 2px solid var(--focus); outline-offset: -2px; }
 
-  .panel-content { padding: 1.25rem 1.5rem; }
+  .panel-content {
+    padding: 1.25rem 1.5rem;
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+  }
   .panel-content h3 {
-    margin: 1.25rem 0 0.4rem;
-    font-size: 1rem;
-    letter-spacing: 0.04em;
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 1.25rem 0 0.45rem;
   }
   .panel-content h3:first-child { margin-top: 0; }
-  .panel-content p {
-    margin: 0 0 0.7rem;
-    font-size: 0.95rem;
-  }
-  .panel-content ul {
-    margin: 0 0 0.7rem;
-    padding-left: 1.4rem;
-    font-size: 0.95rem;
-  }
+  .panel-content p { margin-bottom: 0.65rem; line-height: 1.6; }
+  .panel-content ul { padding-left: 1.4rem; margin-bottom: 0.65rem; }
   .panel-content li { margin-bottom: 0.3rem; }
-  .panel-content a {
-    color: var(--accent);
-    text-decoration: underline;
-  }
-  .panel-content a:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .panel-content a { color: var(--accent); text-decoration: underline; }
+  .panel-content strong { color: var(--ink); font-weight: 600; }
 
-  .controls {
-    background: var(--paper);
+  /* ── AUDIO STATUS ── */
+  .audio-status {
+    background: var(--surface);
     border: 1px solid var(--border);
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
+    padding: 0.65rem 1rem;
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--ink-mute);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+  .audio-status.loading { border-color: var(--border2); color: var(--accent-dim); }
+  .audio-status.ready { border-color: var(--green); color: var(--green-ink); background: var(--green-bg); }
+  .audio-status.hidden { display: none; }
+  .spinner {
+    display: inline-block; width: 13px; height: 13px;
+    border: 2px solid var(--border2); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── CONTROLS PANEL ── */
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem 1.25rem 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  .controls-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
-    align-items: center;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+  .controls-row + .controls-row {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
   }
   .control-group {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
   }
-  .control-group .label {
-    font-size: 0.75rem;
+  .ctrl-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--muted);
+    color: var(--ink-mute);
+  }
+
+  /* toggle-row: pill segmented control */
+  .toggle-row {
+    display: flex;
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .toggle-row button {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border2);
+    padding: 0.45rem 1rem;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+    color: var(--ink-mute);
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s;
+  }
+  .toggle-row button:last-child { border-right: none; }
+  .toggle-row button.active { background: var(--accent); color: #14110f; font-weight: 600; }
+  .toggle-row button:hover:not(.active):not(:disabled) { background: var(--surface2); color: var(--ink); }
+  .toggle-row button:focus { outline: 2px solid var(--focus); outline-offset: -2px; position: relative; z-index: 1; }
+
+  /* Mode help strip */
+  .mode-help-text {
+    font-size: 0.8rem;
+    color: var(--ink-mute);
+    font-style: italic;
+    padding: 0.45rem 0.7rem;
+    border-left: 2px solid var(--accent-dim);
+    background: var(--surface2);
+    flex-basis: 100%;
+    margin-top: 0.1rem;
+  }
+
+  /* Circle of fifths key grid */
+  .key-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: flex-start;
+  }
+  .key-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 0.22rem;
+    align-items: center;
+  }
+  .key-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 0.32rem 0.65rem;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 0.83rem;
+    cursor: pointer;
+    color: var(--ink-mute);
+    white-space: nowrap;
+    min-width: 5.2rem;
+    text-align: center;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .key-btn.active { background: var(--accent); color: #14110f; border-color: var(--accent); font-weight: 600; }
+  .key-btn.minor { font-size: 0.78rem; }
+  .key-btn:hover:not(.active) { background: var(--surface2); color: var(--ink); border-color: var(--border2); }
+  .key-btn:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* ── NOTE REFERENCE PANEL ── */
+  .note-reference { margin-bottom: 0.75rem; }
+  .note-ref-content { padding: 1rem 1.25rem 1.25rem; }
+  .note-ref-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    margin-bottom: 0.75rem;
+  }
+  .note-ref-staffs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .note-ref-staff-block {
+    flex: 1;
+    min-width: 280px;
+  }
+  .note-ref-staff-block h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.45rem;
     font-weight: 600;
   }
-  .toggle-buttons {
+  .note-ref-container { overflow-x: auto; }
+
+  /* Staff containers: white background box so VexFlow renders black-on-white
+     naturally without any CSS color overrides (overrides break ledger lines).
+     overflow:visible lets notes outside the SVG bounds show (high/low ledger lines). */
+  .stave-container,
+  .note-ref-container {
+    background: #ffffff;
+    border-radius: 2px;
+    padding: 4px;
+  }
+  .stave-container svg,
+  .note-ref-container svg { overflow: visible !important; display: block; }
+
+  /* ── EXERCISE CARD ── */
+  .exercise {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem 1.5rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .exercise-header {
     display: flex;
-    border: 1px solid var(--border);
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
   }
-  .toggle-buttons button {
-    background: var(--paper);
-    border: none;
-    padding: 0.5rem 0.9rem;
-    font-family: Georgia, serif;
-    font-size: 0.9rem;
+  .exercise-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    font-weight: 600;
+  }
+  .exercise-title { font-size: 1.25rem; font-weight: 400; margin-bottom: 0.25rem; }
+  .exercise-prompt { color: var(--ink-mute); font-size: 0.88rem; margin-bottom: 1rem; font-style: italic; }
+
+  .stave-container {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── AUDIO CONTROLS ── */
+  .audio-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 0.75rem;
+  }
+  .audio-controls button {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 0.88rem;
     cursor: pointer;
-    color: var(--ink);
-    border-right: 1px solid var(--border);
+    padding: 0.48rem 1.05rem;
+    border-radius: var(--r);
+    transition: background 0.12s, color 0.12s;
+    letter-spacing: 0.01em;
   }
-  .toggle-buttons button:last-child { border-right: none; }
-  .toggle-buttons button.active {
+  .audio-controls button:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .audio-controls button:disabled { opacity: 0.38; cursor: not-allowed; }
+  #playBtn {
     background: var(--accent);
-    color: white;
+    color: #14110f;
+    border: none;
+    font-weight: 600;
   }
-  .toggle-buttons button:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
-
-  .mode-help {
-    flex-basis: 100%;
-    margin: 0;
-    padding: 0.6rem 0.85rem;
-    font-size: 0.85rem;
-    color: var(--muted);
-    background: var(--soft);
-    border-left: 3px solid var(--accent);
-    font-style: italic;
+  #playBtn:hover:not(:disabled) { background: #e8b85e; }
+  #playBtn:disabled { background: var(--border2); color: var(--ink-mute); opacity: 1; }
+  .audio-controls button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+  }
+  .audio-controls button.secondary:hover:not(:disabled) {
+    background: var(--surface2);
+    border-color: var(--accent);
+  }
+  .audio-controls button.secondary:disabled {
+    color: var(--ink-mute);
+    border-color: var(--border);
+    background: transparent;
+    opacity: 1;
   }
 
-  /* Reveal Notes panel — shown in Learn mode when user clicks "Reveal Notes" */
+  /* ── REVEAL PANEL ── */
   .reveal-panel {
-    background: var(--soft);
+    background: var(--surface2);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    padding: 0.85rem 1rem 0.9rem;
-    margin: 0.5rem 0 0.75rem;
+    border-left: 3px solid var(--accent-dim);
+    padding: 0.8rem 1rem;
+    margin: 0.4rem 0 0.75rem;
   }
   .reveal-panel.hidden { display: none; }
   .reveal-grid-label {
-    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--muted);
+    color: var(--ink-mute);
     font-weight: 700;
-    margin: 0 0 0.5rem;
+    margin-bottom: 0.45rem;
   }
-  .reveal-content {
-    font-size: 0.95rem;
-    margin: 0 0 0.65rem;
-    line-height: 1.55;
-  }
+  .reveal-content { font-size: 0.9rem; margin-bottom: 0.6rem; }
   .reveal-content .row {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-bottom: 0.2rem;
-    flex-wrap: wrap;
+    display: flex; align-items: baseline; gap: 0.5rem;
+    margin-bottom: 0.2rem; flex-wrap: wrap;
   }
   .reveal-content .row-label {
-    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--muted);
+    color: var(--ink-mute);
     font-weight: 600;
-    min-width: 5rem;
+    min-width: 4.5rem;
   }
-  .reveal-content .row-value {
-    font-weight: 600;
-    color: var(--ink);
-  }
+  .reveal-content .row-value { font-weight: 600; color: var(--ink); }
   .reveal-panel button {
     background: transparent;
     color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 0.45rem 0.95rem;
-    font-family: Georgia, serif;
+    border: 1px solid var(--accent-dim);
+    padding: 0.38rem 0.85rem;
+    font-family: 'Fraunces', Georgia, serif;
     font-size: 0.85rem;
     cursor: pointer;
-    letter-spacing: 0.02em;
+    border-radius: var(--r);
   }
-  .reveal-panel button:hover:not(:disabled) {
-    background: var(--accent);
-    color: white;
-  }
+  .reveal-panel button:hover:not(:disabled) { background: var(--surface); border-color: var(--accent); }
   .reveal-panel button:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .reveal-panel button:disabled {
-    color: #b8b3a8;
-    border-color: #b8b3a8;
-    cursor: not-allowed;
-  }
 
-  /* In quiz mode, hide the learn-mode reveal panel */
   .exercise.quiz-active .reveal-panel { display: none; }
   .exercise.quiz-active #revealNotesBtn { display: none; }
 
+  /* ── QUIZ LAYOUT ── */
   .quiz-layout {
     display: grid;
     grid-template-columns: 1fr;
@@ -248,341 +428,192 @@
     }
   }
   .quiz-stave-wrapper { min-width: 0; }
-  .quiz-grid-wrapper {
-    display: none;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+  .quiz-grid-wrapper { display: none; flex-direction: column; gap: 0.5rem; }
   .quiz-active .quiz-grid-wrapper { display: flex; }
 
   .quiz-grid-label {
-    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--muted);
+    color: var(--ink-mute);
     font-weight: 700;
-    margin: 0 0 0.25rem;
+    margin-bottom: 0.2rem;
   }
   .interval-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.4rem;
+    gap: 0.38rem;
   }
   @media (min-width: 480px) and (max-width: 719px) {
     .interval-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   .interval-btn {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    padding: 0.55rem 0.5rem;
-    font-family: Georgia, serif;
-    font-size: 0.85rem;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 0.5rem 0.45rem;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 0.84rem;
     cursor: pointer;
-    color: var(--ink);
+    color: var(--ink-mute);
     text-align: center;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    min-height: 2.5rem;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+    min-height: 2.4rem;
   }
   .interval-btn:hover:not(:disabled) {
-    border-color: var(--accent);
-    background: var(--soft);
+    border-color: var(--accent-dim);
+    background: var(--surface);
+    color: var(--ink);
   }
   .interval-btn:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .interval-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
-  }
+  .interval-btn:disabled { cursor: not-allowed; opacity: 0.45; }
   .interval-btn.correct {
-    background: #e8f0e4;
-    border-color: #5a8a4e;
-    color: #2d5023;
-    font-weight: 600;
+    background: var(--green-bg); border-color: var(--green);
+    color: var(--green-ink); font-weight: 600;
   }
   .interval-btn.incorrect {
-    background: #f5e0dc;
-    border-color: #b04a3a;
-    color: #6b2818;
-    font-weight: 600;
+    background: var(--red-bg); border-color: var(--red);
+    color: var(--red-ink); font-weight: 600;
   }
-  .interval-btn .icon {
-    font-weight: 700;
-    font-size: 1rem;
-  }
+  .interval-btn .icon { font-weight: 700; font-size: 1rem; }
 
-  /* Quiz status messages */
+  /* ── QUIZ STATUS ── */
   .quiz-status {
-    padding: 0.7rem 0.9rem;
-    font-size: 0.9rem;
-    border-left: 3px solid var(--border);
-    background: var(--soft);
-    margin: 0.75rem 0 0;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.86rem;
+    border-left: 3px solid var(--border2);
+    background: var(--surface2);
+    margin-top: 0.65rem;
+    line-height: 1.5;
   }
-  .quiz-status.correct {
-    background: #e8f0e4;
-    border-left-color: #5a8a4e;
-    color: #2d5023;
-  }
-  .quiz-status.incorrect {
-    background: #f5e0dc;
-    border-left-color: #b04a3a;
-    color: #6b2818;
-  }
-  .quiz-status.reveal {
-    background: #fdf6e3;
-    border-left-color: #c9a227;
-    color: #5a4400;
-  }
+  .quiz-status.correct { background: var(--green-bg); border-left-color: var(--green); color: var(--green-ink); }
+  .quiz-status.incorrect { background: var(--red-bg); border-left-color: var(--red); color: var(--red-ink); }
+  .quiz-status.reveal { background: var(--gold-bg); border-left-color: var(--accent-dim); color: var(--gold-ink); }
   .quiz-status.hidden { display: none; }
-  .quiz-status .icon {
-    font-weight: 700;
-    margin-right: 0.4rem;
-  }
+  .quiz-status .icon { font-weight: 700; margin-right: 0.25rem; }
 
-  /* In quiz mode, hide the learn-mode reading description */
   .exercise.quiz-active .description { display: none; }
-  .exercise.quiz-active .exercise-prompt { font-size: 0.95rem; }
 
-  .exercise {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    padding: 1.5rem 1.5rem 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  }
-  .exercise-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .exercise-number {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    font-weight: 700;
-  }
-  .exercise-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0 0 0.25rem;
-  }
-  .exercise-prompt {
-    color: var(--muted);
-    margin: 0 0 1rem;
-    font-size: 0.95rem;
-  }
-  .stave-container {
-    overflow-x: auto;
-    margin-bottom: 1rem;
-    border-bottom: 1px dashed var(--border);
-    padding-bottom: 1rem;
-  }
-
-  .audio-controls {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.75rem;
-  }
-  .audio-controls button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 0.55rem 1.1rem;
-    font-family: Georgia, serif;
-    font-size: 0.9rem;
-    cursor: pointer;
-    letter-spacing: 0.02em;
-  }
-  .audio-controls button:hover:not(:disabled) { background: #234c64; }
-  .audio-controls button:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .audio-controls button:disabled {
-    background: #b8b3a8;
-    cursor: not-allowed;
-  }
-  .audio-controls button.secondary {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-  }
-  .audio-controls button.secondary:hover:not(:disabled) {
-    background: var(--accent);
-    color: white;
-  }
-  .audio-controls button.secondary:disabled {
-    color: #b8b3a8;
-    border-color: #b8b3a8;
-    cursor: not-allowed;
-    background: transparent;
-  }
-
+  /* ── DESCRIPTION ── */
   .description {
-    font-size: 0.85rem;
-    color: var(--muted);
-    border-top: 1px dashed var(--border);
-    padding-top: 0.75rem;
-    margin: 0;
+    font-size: 0.8rem;
+    color: var(--ink-mute);
+    border-top: 1px solid var(--border);
+    padding-top: 0.65rem;
     font-style: italic;
   }
-  .description strong {
-    font-style: normal;
-    color: var(--ink);
-    font-weight: 600;
-  }
+  .description strong { font-style: normal; color: var(--ink-dim); font-weight: 600; }
 
+  /* ── NAV ── */
   .nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1.5rem;
-    padding: 1rem 0;
+    padding: 0.65rem 0;
+    margin-bottom: 0.75rem;
   }
   .nav button {
-    background: var(--paper);
-    border: 1px solid var(--ink);
-    padding: 0.65rem 1.5rem;
-    font-family: Georgia, serif;
-    font-size: 0.95rem;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 0.55rem 1.35rem;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 0.9rem;
     cursor: pointer;
-    color: var(--ink);
-    letter-spacing: 0.02em;
+    color: var(--ink-mute);
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
   }
   .nav button:hover:not(:disabled) {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--surface2); color: var(--ink); border-color: var(--accent-dim);
   }
   .nav button:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .nav button:disabled {
-    color: #b8b3a8;
-    border-color: #b8b3a8;
-    cursor: not-allowed;
-  }
+  .nav button:disabled { color: var(--border2); border-color: var(--border); cursor: not-allowed; }
   .nav-status {
-    color: var(--muted);
-    font-size: 0.9rem;
-    font-style: italic;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--ink-mute);
   }
 
-  /* Audio status banner — handles both "click to start" and "loading" states */
-  .audio-status {
-    background: var(--soft);
-    border: 1px solid var(--border);
-    padding: 0.85rem 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    color: var(--muted);
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .audio-status button {
-    background: var(--accent-warm);
-    color: white;
-    border: none;
-    padding: 0.45rem 1rem;
-    font-family: Georgia, serif;
-    cursor: pointer;
-  }
-  .audio-status.loading {
-    background: #fdf6e3;
-    border-color: #e6dfc8;
-  }
-  .audio-status.ready {
-    background: #e8f0e4;
-    border-color: #c4d4bc;
-    color: #3a5a32;
-  }
-  .audio-status.hidden { display: none; }
-
-  /* Simple spinner for loading state */
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent-warm);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
+  /* ── ATTRIBUTION ── */
   .attribution {
-    margin-top: 2.5rem;
-    padding: 1rem 1.25rem;
-    background: var(--paper);
+    margin-top: 1.75rem;
+    padding: 0.9rem 1.25rem;
+    background: var(--surface);
     border: 1px solid var(--border);
-    font-size: 0.8rem;
-    color: var(--muted);
+    font-size: 0.76rem;
+    color: var(--ink-mute);
     line-height: 1.6;
   }
   .attribution h4 {
-    margin: 0 0 0.4rem;
-    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--ink);
+    color: var(--ink-dim);
     font-weight: 700;
+    margin-bottom: 0.35rem;
   }
-  .attribution p { margin: 0 0 0.3rem; }
-  .attribution p:last-child { margin-bottom: 0; }
-  .attribution a {
-    color: var(--accent);
-    text-decoration: underline;
-  }
+  .attribution p { margin-bottom: 0.2rem; }
+  .attribution a { color: var(--accent); text-decoration: underline; }
 
+  /* ── FOOTER ── */
   footer {
-    margin-top: 1.5rem;
-    color: var(--muted);
-    font-size: 0.8rem;
+    margin-top: 1.75rem;
+    color: var(--ink-mute);
+    font-size: 0.78rem;
     font-style: italic;
     text-align: center;
   }
-  /* v0.1.0: sister-app footer styling. The link picks up the accent
-     color so it reads as actionable; the separator is a subtle middle
-     dot in the muted color. */
-  footer a {
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.15s;
-  }
-  footer a:hover, footer a:focus-visible {
-    border-bottom-color: var(--accent);
-  }
-  footer .footer-sep {
-    margin: 0 0.5rem;
-    opacity: 0.6;
-  }
+  footer a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  footer a:hover, footer a:focus-visible { border-bottom-color: var(--accent); }
+  .footer-sep { margin: 0 0.5rem; opacity: 0.4; }
 
-  .sr-only {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
+
+  /* ── INTERVAL FILTER GRID ── */
+  .interval-filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: flex-start;
+  }
+  .iv-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 0.28rem 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink-mute);
     white-space: nowrap;
-    border: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .iv-btn.active { background: var(--accent); color: #14110f; border-color: var(--accent); }
+  .iv-btn:hover:not(.active) { background: var(--surface2); color: var(--ink); }
+  .iv-btn:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .iv-btn-all { font-style: italic; }
+
+  /* strong inside mode-help-text */
+  .mode-help-text strong { color: var(--ink-dim); font-style: normal; }
+
+  /* ── SR ONLY ── */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
 </style>
 </head>
 <body>
 <div class="container">
 
+  <a class="skip-link" href="#exerciseCard">Skip to exercise</a>
+
   <header>
-    <h1>Music Reading Trainer</h1>
-    <p class="subtitle">Eye–Ear Coordination One Step at a Time.</p>
+    <h1>Music <em>Reading</em> Trainer</h1>
+    <p class="subtitle">Eye–Ear Coordination · One Step at a Time</p>
   </header>
 
   <!-- USER MANUAL -->
@@ -591,146 +622,184 @@
     <div class="panel-content">
 
       <h3>The Staff and Clefs</h3>
-      <p>Music is written on a five-line <em>staff</em>. A <em>clef</em> at the start of the staff tells you which notes the lines and spaces represent.</p>
+      <p>Music is written on a five-line <strong>staff</strong>. A <strong>clef</strong> at the start tells you which notes each line and space represents.</p>
       <ul>
-        <li><strong>Treble clef</strong> (𝄞) is used for higher pitches — typically the right hand on piano, or instruments like flute, violin, and most vocal lines. Its lines from bottom to top are E, G, B, D, F. Its spaces spell F-A-C-E.</li>
-        <li><strong>Bass clef</strong> (𝄢) is used for lower pitches — the left hand on piano, bass guitar, cello, etc. Its lines from bottom to top are G, B, D, F, A. Its spaces are A, C, E, G.</li>
-        <li>The two clefs meet at <strong>middle C</strong> — one ledger line below the treble staff and one ledger line above the bass staff.</li>
+        <li><strong>Treble clef</strong> — higher pitches (right hand piano, flute, violin). Lines bottom to top: <strong>E G B D F</strong>. Spaces: <strong>F A C E</strong>.</li>
+        <li><strong>Bass clef</strong> — lower pitches (left hand piano, bass guitar, cello). Lines: <strong>G B D F A</strong>. Spaces: <strong>A C E G</strong>.</li>
+        <li>The two clefs meet at <strong>middle C</strong> — one ledger line below treble, one above bass.</li>
+        <li>Selecting <strong>Both</strong> displays the grand staff (treble on top, bass below) — the view pianists read from.</li>
       </ul>
 
-      <h3>Note Durations</h3>
-      <p>Notes are held for different lengths of time:</p>
-      <ul>
-        <li><strong>Whole note</strong> — 4 beats</li>
-        <li><strong>Half note</strong> — 2 beats</li>
-        <li><strong>Quarter note</strong> — 1 beat (this is what these exercises use)</li>
-        <li><strong>Eighth note</strong> — half a beat</li>
-      </ul>
+      <h3>Key Signatures &amp; the Circle of Fifths</h3>
+      <p>Keys are arranged in <strong>circle of fifths</strong> order: C (no accidentals) → G (1 sharp) → D (2 sharps) → A (3 sharps) → E (4 sharps), then the flat side: F (1 flat) → B♭ (2 flats) → and so on.</p>
+      <p>Each <strong>major key</strong> is paired with its <strong>relative minor</strong> directly below it — they share the same key signature. C major / A minor both have no sharps or flats. G major / E minor both have one sharp (F♯).</p>
 
-      <h3>Time Signatures</h3>
-      <p>The two numbers at the start of the music tell you how the beats are grouped. The top number is how many beats per measure; the bottom number tells you what kind of note gets one beat.</p>
-      <ul>
-        <li><strong>4/4</strong> — four quarter-note beats per measure. The most common time signature in popular music.</li>
-        <li><strong>3/4</strong> — three quarter-note beats per measure. Waltz time. These exercises use 3/4 because each interval is taught in three steps: root, second note, and the two notes played together.</li>
-      </ul>
-
-      <h3>Sharps and Flats</h3>
-      <p>A <strong>sharp</strong> (♯) raises a note by one semitone. A <strong>flat</strong> (♭) lowers it by one. A <strong>natural</strong> (♮) cancels a previous sharp or flat.</p>
-      <p>In other keys, sharps or flats appear right after the clef as a <em>key signature</em>, telling you which notes to alter throughout the piece.</p>
-
-      <h3>Key Signatures Available in This Release</h3>
-      <p>This release offers three keys to practice:</p>
-      <ul>
-        <li><strong>C major</strong> — no sharps or flats. The simplest starting point. Tonic is C.</li>
-        <li><strong>G major</strong> — one sharp (F♯). Tonic is G. Exercises are rooted on G and the key signature applies throughout.</li>
-        <li><strong>E minor</strong> — one sharp (F♯), same as G major (they share a key signature — G major is the relative major of E minor). Tonic is E. Useful for any piece in E minor you may be learning. Notice that in E minor, a "major 3rd ascending" from E lands on G♯, while a "minor 3rd ascending" from E lands on G (the natural note in the scale). Spelling intervals in different keys is part of real reading practice.</li>
-      </ul>
-      <p>Use the <strong>Key</strong> selector in the controls bar to switch between these keys. The same exercises and intervals are presented, but rooted on the chosen key's tonic and with the appropriate key signature drawn on the staff.</p>
+      <h3>Note Reference</h3>
+      <p>The <strong>Note Reference</strong> panel (below the controls) shows every natural note on the staff with its letter name labeled. Use it as a visual guide when you're just starting out. The notes shown in <strong class="accent-text">gold</strong> are on ledger lines (above or below the staff).</p>
 
       <h3>What Is an Interval?</h3>
-      <p>An <strong>interval</strong> is the distance between two pitches. Intervals have two qualities: a <em>number</em> (second, third, fourth, fifth, etc.) counting the letter names, and a <em>quality</em> (major, minor, perfect, augmented, diminished) describing the exact distance in semitones.</p>
-      <ul>
-        <li>A <strong>melodic interval</strong> is two notes played one after the other.</li>
-        <li>A <strong>harmonic interval</strong> is two notes played at the same time.</li>
-        <li>Each exercise here shows both: beat 1 is the root, beat 2 is the second note, beat 3 is the two notes sounded together as a harmony.</li>
-      </ul>
+      <p>An <strong>interval</strong> is the distance between two pitches — a number (2nd, 3rd, 4th…) plus a quality (major, minor, perfect). Each exercise shows three beats: root alone, second note alone, then both together as harmony.</p>
 
-      <h3>Mode A vs. Mode B (Descending Perfect Intervals)</h3>
-      <p>When a <em>perfect</em> interval (perfect 4th, perfect 5th, or octave) moves downward, there are two valid ways to think about it. Both keep the root note (C) anchored in the same place — the difference is where the second note lands. Both are used in real music education. Try both and see which fits how you think.</p>
+      <h3>Descending Perfect Intervals — Root Relative vs. Exact Distance</h3>
+      <p>For descending <em>perfect</em> intervals (P4, P5, P8) only, two approaches exist:</p>
       <ul>
-        <li><strong>Mode A — Interval Recognition.</strong> Descend to the <em>same letter name</em> you'd ascend to. A "descending P5 from C" means starting on C and dropping to the G below. The two notes form a perfect fifth — the same interval as ascending C-to-G, just explored from above the root rather than below. This is the most common approach in ear training apps and is generally easier for beginners.</li>
-        <li><strong>Mode B — Root-Relative.</strong> Descend by the <em>interval distance</em>. A "descending P5 from C" means going down 7 semitones (the size of a P5), landing on F below. This is how working musicians often think about voice leading and harmony, and it leads naturally into circle-of-fifths thinking.</li>
+        <li><strong>Root Relative:</strong> the same note going up or down from the root. C to G going up, and C to G going down. The interval inverts (P5 becomes P4) but the letter name stays the same. Recommended for sight-singing and beginners — keeps you in the key.</li>
+        <li><strong>Exact Distance:</strong> counts the same number of semitones in both directions. C to G going up (7 semitones), but C to F going down (also 7 semitones). Used in Circle of Fifths thinking and chord progressions.</li>
       </ul>
-      <p>Neither is wrong. They train slightly different mental skills. You can switch modes at any time using the toggle above the exercises.</p>
-      <p><strong>Why only perfect intervals?</strong> The Mode A / Mode B distinction is most meaningful for perfect 4ths, 5ths, and octaves, where it represents how musicians actually think about descending interval relationships. For other intervals (2nds, 3rds, 6ths, 7ths, tritone), descending always uses the strict interval-distance interpretation regardless of the toggle, since the alternative would produce musically awkward results that no working musician thinks in terms of. Ascending intervals, of course, are the same in both modes.</p>
+      <p>All other intervals (2nds, 3rds, 6ths, 7ths, tritone) always use exact distance — this toggle only affects P4, P5, and octave.</p>
 
-      <h3>How These Exercises Work</h3>
-      <p>Each exercise is in 3/4 time. You'll see three quarter notes:</p>
-      <ul>
-        <li><strong>Beat 1:</strong> the root note alone (melodic)</li>
-        <li><strong>Beat 2:</strong> the second note alone (melodic)</li>
-        <li><strong>Beat 3:</strong> both notes played together (harmonic)</li>
-      </ul>
-      <p>This structure mirrors how you'd actually practice an interval at an instrument: play the root, play the second note, then play them together to hear the harmony.</p>
-
-      <h3>Range of This Release</h3>
-      <p>This release uses pitches from <strong>C2 to C6</strong> — four octaves spanning the full reading range most beginning to intermediate students will encounter. This includes:</p>
-      <ul>
-        <li><strong>C2 to E2</strong> — two ledger lines below the bass staff, useful practice for left-hand bass piano reading</li>
-        <li><strong>F2 to A3</strong> — within the bass staff itself</li>
-        <li><strong>B3 to D4</strong> — the area around middle C, including ledger lines between the two staves</li>
-        <li><strong>E4 to G5</strong> — within the treble staff itself</li>
-        <li><strong>A5 to C6</strong> — two ledger lines above the treble staff, useful practice for high right-hand reading</li>
-      </ul>
-      <p>Practicing in all of these registers is important because the same interval can read and sound differently depending on where it sits on the staff. The ledger-line zones (the extremes of this range) are where many readers struggle, so this release includes deliberate practice there.</p>
-
-      <h3>About Accessibility</h3>
-      <p>This app is a <em>sight-reading</em> trainer — its purpose is to develop your ability to look at written music on the staff and recognize what you see. The visual content is the curriculum, not decoration.</p>
-      <p>Because the staff is the thing being read, this app is designed primarily for sighted users. We have worked to make every control on the page (clef toggle, key selector, mode toggle, activity toggle, audio controls, quiz buttons) fully keyboard-navigable and screen-reader friendly — so a sighted user with motor disabilities, low vision that still permits staff reading, or who prefers keyboard navigation can use the app fully. But we deliberately do not try to make the staff itself read aloud in a way that would announce the answer to the quiz.</p>
-      <p>If you can't read music notation visually, our companion app <strong><a href="https://filmnoises.github.io/Ear-Training/" target="_blank" rel="noopener">Ear Trainer</a></strong> trains the same underlying skill — interval and chord recognition — through audio alone. The two apps are sister tools for the same musicianship, approached from different senses.</p>
+      <h3>Accessibility</h3>
+      <p>All interactive controls are keyboard-navigable and screen-reader friendly. The staff is not announced audibly — it is the curriculum. Users who cannot read notation visually are directed to the companion <a href="https://filmnoises.github.io/Ear-Training/" target="_blank" rel="noopener">Ear Trainer</a>, which trains the same skills through audio alone.</p>
 
       <h3>Audio &amp; Attribution</h3>
-      <p>The piano sounds you hear are real recorded samples of a Yamaha C5 grand piano, generously released under a Creative Commons license by Alexander Holm. The audio playback engine is Tone.js, a JavaScript audio framework by Yotam Mann. The musical staff is rendered by VexFlow, a JavaScript music notation library.</p>
-      <ul>
-        <li><strong>Salamander Grand Piano</strong> by Alexander Holm — <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a>. Samples available at <a href="https://github.com/sfzinstruments/SalamanderGrandPiano" target="_blank" rel="noopener">github.com/sfzinstruments/SalamanderGrandPiano</a>.</li>
-        <li><strong>Tone.js</strong> by Yotam Mann — <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>. Available at <a href="https://tonejs.github.io/" target="_blank" rel="noopener">tonejs.github.io</a>.</li>
-        <li><strong>VexFlow</strong> — <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>. Available at <a href="https://github.com/0xfe/vexflow" target="_blank" rel="noopener">github.com/0xfe/vexflow</a>.</li>
-      </ul>
-      <p>All three contributions are gratefully acknowledged.</p>
+      <p>Piano samples: <strong>Salamander Grand Piano</strong> by Alexander Holm (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a>). Audio: <strong>Tone.js</strong> by Yotam Mann (MIT). Notation: <strong>VexFlow</strong> (MIT).</p>
 
     </div>
   </details>
 
-  <!-- AUDIO STATUS BANNER
-       v0.1.0: auto-start pattern (no explicit "Enable Audio" button).
-       The sampler begins loading immediately on page load. The first
-       user interaction with the page resolves Tone.js's audio context
-       (browsers require user gesture before audio plays). The banner
-       shows progress and auto-hides when ready. Users who don't want
-       sound can mute their system or close the page. -->
+  <!-- AUDIO STATUS -->
   <div id="audioStatus" class="audio-status loading" role="status" aria-live="polite">
     <span id="audioStatusText"><span class="spinner" aria-hidden="true"></span> Loading piano samples…</span>
   </div>
 
   <!-- CONTROLS -->
   <div class="controls" role="region" aria-label="Exercise settings">
-    <div class="control-group">
-      <span class="label" id="clef-label">Clef</span>
-      <div class="toggle-buttons" role="group" aria-labelledby="clef-label">
-        <button id="clef-treble" class="active" type="button" aria-pressed="true">Treble</button>
-        <button id="clef-bass" type="button" aria-pressed="false">Bass</button>
+
+    <!-- Row 1: Activity + Direction + Descending Perfect Intervals mode -->
+    <div class="controls-row">
+      <div class="control-group">
+        <span class="ctrl-label" id="activity-label">Activity</span>
+        <div class="toggle-row" role="group" aria-labelledby="activity-label">
+          <button id="activity-learn" type="button" class="active" aria-pressed="true">Learn</button>
+          <button id="activity-quiz"  type="button" aria-pressed="false">Quiz</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="ctrl-label" id="direction-label">Direction</span>
+        <div class="toggle-row" role="group" aria-labelledby="direction-label">
+          <button id="dir-asc"  type="button" class="active" aria-pressed="true">Ascending</button>
+          <button id="dir-desc" type="button" aria-pressed="false">Descending</button>
+          <button id="dir-both" type="button" aria-pressed="false">Both</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="ctrl-label" id="mode-label">Descending Perfect Intervals <span style="font-weight:400;text-transform:none;letter-spacing:0">(see below)</span></span>
+        <div class="toggle-row" role="group" aria-labelledby="mode-label">
+          <button id="mode-a" type="button" class="active" aria-pressed="true">Root Relative</button>
+          <button id="mode-b" type="button" aria-pressed="false">Exact Distance</button>
+        </div>
+      </div>
+
+      <p class="mode-help-text" id="modeHelp">
+        <strong>Root Relative</strong> for P4/P5/P8: same note going up or down. Example: C to G going up &amp; C to G going down. &nbsp;·&nbsp;
+        <strong>Exact Distance</strong> for P4/P5/P8: same number of semitones up and down. Example: C to G going up &amp; C to F going down.
+        All other intervals always use exact distance.
+      </p>
+    </div>
+
+    <!-- Row 2: Clef + Keys (circle of fifths pairs) -->
+    <div class="controls-row">
+
+      <div class="control-group">
+        <span class="ctrl-label" id="clef-label">Clef</span>
+        <div class="toggle-row" role="group" aria-labelledby="clef-label">
+          <button id="clef-treble" type="button" class="active" aria-pressed="true">Treble</button>
+          <button id="clef-bass"   type="button" aria-pressed="false">Bass</button>
+          <button id="clef-both"   type="button" aria-pressed="false">Both</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="ctrl-label" id="key-label">Key <span style="font-weight:400;text-transform:none;letter-spacing:0">(major / relative minor)</span></span>
+        <div class="key-grid" role="group" aria-labelledby="key-label">
+
+          <div class="key-pair">
+            <button class="key-btn active" id="key-C-major"  type="button" aria-pressed="true">C major</button>
+            <button class="key-btn minor"  id="key-A-minor"  type="button" aria-pressed="false">A minor</button>
+          </div>
+
+          <div class="key-pair">
+            <button class="key-btn" id="key-G-major"  type="button" aria-pressed="false">G major</button>
+            <button class="key-btn minor" id="key-E-minor"  type="button" aria-pressed="false">E minor</button>
+          </div>
+
+          <div class="key-pair">
+            <button class="key-btn" id="key-D-major"  type="button" aria-pressed="false">D major</button>
+            <button class="key-btn minor" id="key-B-minor"  type="button" aria-pressed="false">B minor</button>
+          </div>
+
+          <div class="key-pair">
+            <button class="key-btn" id="key-A-major"  type="button" aria-pressed="false">A major</button>
+            <button class="key-btn minor" id="key-Fs-minor" type="button" aria-pressed="false">F♯ minor</button>
+          </div>
+
+          <div class="key-pair">
+            <button class="key-btn" id="key-E-major"  type="button" aria-pressed="false">E major</button>
+            <button class="key-btn minor" id="key-Cs-minor" type="button" aria-pressed="false">C♯ minor</button>
+          </div>
+
+          <div class="key-pair">
+            <button class="key-btn" id="key-F-major"  type="button" aria-pressed="false">F major</button>
+            <button class="key-btn minor" id="key-D-minor"  type="button" aria-pressed="false">D minor</button>
+          </div>
+
+          <div class="key-pair">
+            <button class="key-btn" id="key-Bb-major" type="button" aria-pressed="false">B♭ major</button>
+            <button class="key-btn minor" id="key-G-minor"  type="button" aria-pressed="false">G minor</button>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <div class="control-group">
-      <span class="label" id="key-label">Key</span>
-      <div class="toggle-buttons" role="group" aria-labelledby="key-label">
-        <button id="key-c-major" class="active" type="button" aria-pressed="true">C major</button>
-        <button id="key-g-major" type="button" aria-pressed="false">G major</button>
-        <button id="key-e-minor" type="button" aria-pressed="false">E minor</button>
+
+    <!-- Row 3: Interval filter -->
+    <div class="controls-row">
+      <div class="control-group">
+        <span class="ctrl-label" id="interval-filter-label">Intervals</span>
+        <div class="interval-filter-grid" role="group" aria-labelledby="interval-filter-label">
+          <button class="iv-btn iv-btn-all active" id="ivf-all"  type="button" aria-pressed="true">All</button>
+          <button class="iv-btn" id="ivf-m2"  type="button" aria-pressed="false">m2</button>
+          <button class="iv-btn" id="ivf-M2"  type="button" aria-pressed="false">M2</button>
+          <button class="iv-btn" id="ivf-m3"  type="button" aria-pressed="false">m3</button>
+          <button class="iv-btn" id="ivf-M3"  type="button" aria-pressed="false">M3</button>
+          <button class="iv-btn" id="ivf-P4"  type="button" aria-pressed="false">P4</button>
+          <button class="iv-btn" id="ivf-TT"  type="button" aria-pressed="false">TT</button>
+          <button class="iv-btn" id="ivf-P5"  type="button" aria-pressed="false">P5</button>
+          <button class="iv-btn" id="ivf-m6"  type="button" aria-pressed="false">m6</button>
+          <button class="iv-btn" id="ivf-M6"  type="button" aria-pressed="false">M6</button>
+          <button class="iv-btn" id="ivf-m7"  type="button" aria-pressed="false">m7</button>
+          <button class="iv-btn" id="ivf-M7"  type="button" aria-pressed="false">M7</button>
+          <button class="iv-btn" id="ivf-P8"  type="button" aria-pressed="false">P8</button>
+        </div>
       </div>
     </div>
 
-    <div class="control-group">
-      <span class="label" id="mode-label">Descending Mode</span>
-      <div class="toggle-buttons" role="group" aria-labelledby="mode-label">
-        <button id="mode-a" class="active" type="button" aria-pressed="true">Mode A — Recognition</button>
-        <button id="mode-b" type="button" aria-pressed="false">Mode B — Root-Relative</button>
+  </div><!-- end .controls -->
+
+  <!-- NOTE REFERENCE PANEL -->
+  <details class="note-reference">
+    <summary>Note Reference — Staff &amp; Note Names</summary>
+    <div class="note-ref-content">
+      <p class="note-ref-desc">Natural note names on the staff · Gold labels = ledger line notes · Use this guide while learning to read</p>
+      <div class="note-ref-staffs">
+        <div class="note-ref-staff-block">
+          <h4>Treble Clef</h4>
+          <div class="note-ref-container" id="noteRefTreble"
+               role="img" aria-label="Treble clef note reference showing C4 through A5 with note names labeled"></div>
+        </div>
+        <div class="note-ref-staff-block">
+          <h4>Bass Clef</h4>
+          <div class="note-ref-container" id="noteRefBass"
+               role="img" aria-label="Bass clef note reference showing E2 through C4 with note names labeled"></div>
+        </div>
       </div>
     </div>
+  </details>
 
-    <div class="control-group">
-      <span class="label" id="activity-label">Activity</span>
-      <div class="toggle-buttons" role="group" aria-labelledby="activity-label">
-        <button id="activity-learn" class="active" type="button" aria-pressed="true">Learn</button>
-        <button id="activity-quiz" type="button" aria-pressed="false">Quiz</button>
-      </div>
-    </div>
-
-    <p class="mode-help" id="modeHelp">Mode A: descending perfect intervals (P4, P5, P8) land on the same letter name as their ascending version (e.g., C down to G). Other intervals always use exact interval distance.</p>
-  </div>
-
-  <!-- EXERCISE -->
+  <!-- EXERCISE CARD -->
   <div class="exercise" id="exerciseCard" role="region" aria-labelledby="exerciseTitle">
     <div class="exercise-header">
       <span class="exercise-number" id="exerciseNumber">Exercise 1 of 8</span>
@@ -743,17 +812,17 @@
         <div id="staveContainer" class="stave-container" role="img" aria-label=""></div>
 
         <div class="audio-controls">
-          <button id="playBtn" type="button" disabled>▶ Play Exercise</button>
-          <button id="playRootBtn" class="secondary" type="button" disabled>Play Root Only</button>
-          <button id="playSecondBtn" class="secondary" type="button" disabled>Play Second Note</button>
-          <button id="playHarmonicBtn" class="secondary" type="button" disabled>Play Harmonic Only</button>
-          <button id="revealNotesBtn" class="secondary" type="button" disabled>Reveal Notes</button>
+          <button id="playBtn"       type="button" disabled>▶ Play Exercise</button>
+          <button id="playRootBtn"   class="secondary" type="button" disabled>Play Root</button>
+          <button id="playSecondBtn" class="secondary" type="button" disabled>Play 2nd Note</button>
+          <button id="playHarmonicBtn" class="secondary" type="button" disabled>Play Harmonic</button>
+          <button id="revealNotesBtn"  class="secondary" type="button" disabled>Reveal Notes</button>
         </div>
 
         <div id="revealPanel" class="reveal-panel hidden" role="region" aria-label="Note reveal">
           <p class="reveal-grid-label">Notes &amp; interval</p>
           <div class="reveal-content" id="revealContent"></div>
-          <button id="replayRevealBtn" class="secondary" type="button">▶ Play notes again</button>
+          <button id="replayRevealBtn" type="button">▶ Play notes again</button>
         </div>
 
         <p class="description" id="exerciseDescription"><strong>Reading:</strong> </p>
@@ -761,57 +830,51 @@
 
       <div class="quiz-grid-wrapper" id="quizGridWrapper">
         <p class="quiz-grid-label">Select the second note</p>
-        <div class="interval-grid" id="intervalGrid" role="group" aria-label="Interval choices"></div>
+        <div class="interval-grid" id="intervalGrid" role="group" aria-label="Note choices"></div>
         <div class="quiz-status hidden" id="quizStatus" role="status" aria-live="polite"></div>
       </div>
     </div>
   </div>
 
+  <!-- NAVIGATION -->
   <div class="nav">
     <button id="prevBtn" type="button" disabled>← Previous</button>
     <span class="nav-status" id="navStatus">Exercise 1 of 8</span>
     <button id="nextBtn" type="button">Next →</button>
   </div>
 
-  <!-- MODE A vs B REFERENCE — visible by default, collapsible -->
-  <details open class="mode-reference">
-    <summary>Mode A vs. Mode B — Quick Reference</summary>
+  <!-- MODE REFERENCE -->
+  <details open>
+    <summary>Descending Perfect Intervals — Quick Reference</summary>
     <div class="panel-content">
-      <p>For descending <em>perfect</em> intervals (P4, P5, P8), two valid interpretations exist:</p>
+      <p>The <strong>Descending Perfect Intervals</strong> toggle (above) only affects P4, P5, and octave. Two approaches:</p>
       <ul>
-        <li><strong>Mode A — Interval Recognition.</strong> Descend to the <em>same letter name</em> you'd ascend to. A descending P5 from C lands on G below. Same interval relationship, just explored from above the root.</li>
-        <li><strong>Mode B — Root-Relative.</strong> Descend by the <em>interval distance</em>. A descending P5 from C goes down 7 semitones, landing on F below. This is how musicians think harmonically and leads into circle-of-fifths thinking.</li>
+        <li><strong>Root Relative —</strong> the descending note is the <em>same letter name</em> as ascending. Perfect 5th from C lands on G going up <em>and</em> G going down. The interval inverts direction but stays within the key. Good for sight-singing and ear training.</li>
+        <li><strong>Exact Distance —</strong> count down the exact number of semitones. Perfect 5th from C = 7 semitones down = F. The same physical distance in both directions, regardless of key. Essential for Circle of Fifths and chord-progression thinking.</li>
       </ul>
-      <p><strong>For other intervals</strong> (2nds, 3rds, 6ths, 7ths, tritone), descending always uses the strict interval-distance interpretation regardless of the toggle. The full explanation is in the User Manual above.</p>
+      <p><strong>All other intervals</strong> (2nds, 3rds, 6ths, 7ths, tritone) always descend by exact semitone distance — the toggle has no effect on them.</p>
     </div>
   </details>
 
-  <!-- ATTRIBUTION (always visible) -->
+  <!-- ATTRIBUTION -->
   <div class="attribution">
     <h4>Attribution</h4>
-    <p>Piano samples: <strong>Salamander Grand Piano</strong> by Alexander Holm, licensed under <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a>.</p>
-    <p>Audio engine: <strong>Tone.js</strong> by Yotam Mann, <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
-    <p>Notation rendering: <strong><a href="https://github.com/0xfe/vexflow" target="_blank" rel="noopener">VexFlow</a></strong>, <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+    <p>Piano samples: <strong>Salamander Grand Piano</strong> by Alexander Holm — <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC-BY 3.0</a>.</p>
+    <p>Audio engine: <strong>Tone.js</strong> by Yotam Mann — <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+    <p>Notation: <strong><a href="https://github.com/0xfe/vexflow" target="_blank" rel="noopener">VexFlow</a></strong> — <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
   </div>
 
-  <!-- v0.1.0: sister-app cross-link footer. Music Reading Trainer and
-       Ear Trainer are designed as paired tools for the same underlying
-       musicianship — eye training here, ear training there. The link
-       makes the relationship discoverable without needing additional
-       explanation. -->
   <footer>
     Sister app: <a href="https://filmnoises.github.io/Ear-Training/" target="_blank" rel="noopener">Ear Trainer →</a>
     <span class="footer-sep" aria-hidden="true">·</span>
-    Music Reading Trainer v0.1.0
+    Music Reading Trainer v0.2.0
   </footer>
 
-</div>
-
+</div><!-- end .container -->
 <script>
-  // ============ INTERVAL DEFINITIONS ============
-  // The full set of 12 intervals from minor 2nd through octave.
-  // The 'perfect' flag marks intervals where Mode A (letter-name matching) is musically meaningful.
-  // For non-perfect intervals, descending always uses Mode B logic (interval-distance) regardless of toggle.
+  // ============================================================
+  // INTERVAL DEFINITIONS
+  // ============================================================
   const INTERVALS = [
     { id: 'm2', label: 'Minor 2nd',   name: 'minor 2nd',   semitones: 1,  letterStep: 1, perfect: false },
     { id: 'M2', label: 'Major 2nd',   name: 'major 2nd',   semitones: 2,  letterStep: 1, perfect: false },
@@ -826,296 +889,225 @@
     { id: 'M7', label: 'Major 7th',   name: 'major 7th',   semitones: 11, letterStep: 6, perfect: false },
     { id: 'P8', label: 'Octave',      name: 'octave',      semitones: 12, letterStep: 7, perfect: true  }
   ];
+  function getIntervalById(id) { return INTERVALS.find(iv => iv.id === id); }
 
-  function getIntervalById(id) {
-    return INTERVALS.find(iv => iv.id === id);
-  }
-
-  // ============ KEY DEFINITIONS ============
-  // Each key defines its tonic letter, VexFlow key signature string, display name,
-  // and which note (sharp or flat) gets implicitly altered by the key signature.
-  // The 'altered' object maps each natural letter to its altered form when needed
-  // (e.g., G major has F# implicit, so 'f' is rendered as 'f#' by default).
+  // ============================================================
+  // KEY DEFINITIONS — circle of fifths order
+  // Each entry: tonic letter, VexFlow key-sig string, display name,
+  // sharps[] and flats[] = letters altered by the key signature.
+  // ============================================================
   const KEYS = {
-    'C-major': {
-      id: 'C-major',
-      tonicLetter: 'c',
-      vexKeySig: 'C',
-      displayName: 'C major',
-      sharps: [],   // letters that are sharped by the key signature
-      flats: []     // letters that are flatted by the key signature
-    },
-    'G-major': {
-      id: 'G-major',
-      tonicLetter: 'g',
-      vexKeySig: 'G',
-      displayName: 'G major',
-      sharps: ['f'],
-      flats: []
-    },
-    'E-minor': {
-      // E minor shares its key signature with G major (one sharp: F#)
-      id: 'E-minor',
-      tonicLetter: 'e',
-      vexKeySig: 'Em',
-      displayName: 'E minor',
-      sharps: ['f'],
-      flats: []
-    }
+    'C-major':  { id:'C-major',  tonicLetter:'c',  vexKeySig:'C',   displayName:'C major',  sharps:[],              flats:[]     },
+    'A-minor':  { id:'A-minor',  tonicLetter:'a',  vexKeySig:'Am',  displayName:'A minor',  sharps:[],              flats:[]     },
+    'G-major':  { id:'G-major',  tonicLetter:'g',  vexKeySig:'G',   displayName:'G major',  sharps:['f'],           flats:[]     },
+    'E-minor':  { id:'E-minor',  tonicLetter:'e',  vexKeySig:'Em',  displayName:'E minor',  sharps:['f'],           flats:[]     },
+    'D-major':  { id:'D-major',  tonicLetter:'d',  vexKeySig:'D',   displayName:'D major',  sharps:['f','c'],       flats:[]     },
+    'B-minor':  { id:'B-minor',  tonicLetter:'b',  vexKeySig:'Bm',  displayName:'B minor',  sharps:['f','c'],       flats:[]     },
+    'A-major':  { id:'A-major',  tonicLetter:'a',  vexKeySig:'A',   displayName:'A major',  sharps:['f','c','g'],   flats:[]     },
+    'Fs-minor': { id:'Fs-minor', tonicLetter:'f#', vexKeySig:'F#m', displayName:'F♯ minor', sharps:['f','c','g'],   flats:[]     },
+    'E-major':  { id:'E-major',  tonicLetter:'e',  vexKeySig:'E',   displayName:'E major',  sharps:['f','c','g','d'],flats:[]    },
+    'Cs-minor': { id:'Cs-minor', tonicLetter:'c#', vexKeySig:'C#m', displayName:'C♯ minor', sharps:['f','c','g','d'],flats:[]    },
+    'F-major':  { id:'F-major',  tonicLetter:'f',  vexKeySig:'F',   displayName:'F major',  sharps:[],              flats:['b']  },
+    'D-minor':  { id:'D-minor',  tonicLetter:'d',  vexKeySig:'Dm',  displayName:'D minor',  sharps:[],              flats:['b']  },
+    'Bb-major': { id:'Bb-major', tonicLetter:'bb', vexKeySig:'Bb',  displayName:'B♭ major', sharps:[],              flats:['b','e'] },
+    'G-minor':  { id:'G-minor',  tonicLetter:'g',  vexKeySig:'Gm',  displayName:'G minor',  sharps:[],              flats:['b','e'] },
   };
 
-  // Apply a key signature to a pitch: if the pitch's natural letter is altered by the key sig,
-  // return the altered pitch. Used to compute the actual sounding pitches for exercises in non-C keys.
-  function applyKeySignatureToPitch(vexPitch, key) {
-    const [noteName, octave] = vexPitch.split('/');
-    const letter = noteName.charAt(0);
-    const explicitAccidental = noteName.substring(1);
-    // If there's already an explicit accidental (b, #, bb, ##), respect it
-    if (explicitAccidental) return vexPitch;
-    // Otherwise, check if the key signature alters this letter
-    if (key.sharps.includes(letter)) return `${letter}#/${octave}`;
-    if (key.flats.includes(letter)) return `${letter}b/${octave}`;
-    return vexPitch;
-  }
+  const ALL_KEY_IDS = Object.keys(KEYS);
 
-  // Get the absolute semitone offset of a letter from C (0=C, 2=D, 4=E, 5=F, 7=G, 9=A, 11=B)
-  const LETTER_SEMITONES = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+  const LETTER_SEMITONES = { c:0, d:2, e:4, f:5, g:7, a:9, b:11 };
+  const LETTER_NAMES     = ['c','d','e','f','g','a','b'];
+  const NOTE_NAMES_SHARP = ['c','c#','d','d#','e','f','f#','g','g#','a','a#','b'];
 
-  // Get tonic pitch in a given octave for the current key
-  function tonicPitchInOctave(key, octave) {
-    return `${key.tonicLetter}/${octave}`;
-  }
-
-  // Compute the range bounds for a given key — the tonic anchors the range.
-  // Returns absolute semitone bounds for low and high.
-  function getKeyRange(key, clef) {
-    const tonicSemitone = LETTER_SEMITONES[key.tonicLetter];
-    // For each clef, define the comfortable reading range relative to the staff,
-    // then snap to whole octaves of the tonic that fit within Salamander's full range.
-    if (clef === 'treble') {
-      // Treble: roughly from tonic in 3rd or 4th octave up to tonic in 5th or 6th octave
-      return { lowAbs: 36 + tonicSemitone, highAbs: 72 + tonicSemitone }; // e.g., E3 to E6 for E minor
-    } else {
-      // Bass: roughly from tonic in 2nd octave up to tonic in 4th octave
-      return { lowAbs: 24 + tonicSemitone, highAbs: 48 + tonicSemitone }; // e.g., E2 to E4 for E minor
-    }
-  }
-
-  // ============ NOTE CHOICES (for note-naming quiz) ============
-  // The 12 chromatic pitch classes. Each button shows enharmonic equivalents
-  // so a user who reads E♭ on the staff can also click "D♯ / E♭".
-  // The id is the canonical natural-or-flat form used internally.
+  // ============================================================
+  // NOTE CHOICES (for quiz grid)
+  // ============================================================
   const NOTE_CHOICES = [
-    { id: 'c',  label: 'C',        sharps: ['c'],          flats: ['c']   },
-    { id: 'c#', label: 'C♯ / D♭',  sharps: ['c#'],         flats: ['db']  },
-    { id: 'd',  label: 'D',        sharps: ['d'],          flats: ['d']   },
-    { id: 'd#', label: 'D♯ / E♭',  sharps: ['d#'],         flats: ['eb']  },
-    { id: 'e',  label: 'E',        sharps: ['e'],          flats: ['e']   },
-    { id: 'f',  label: 'F',        sharps: ['f'],          flats: ['f']   },
-    { id: 'f#', label: 'F♯ / G♭',  sharps: ['f#'],         flats: ['gb']  },
-    { id: 'g',  label: 'G',        sharps: ['g'],          flats: ['g']   },
-    { id: 'g#', label: 'G♯ / A♭',  sharps: ['g#'],         flats: ['ab']  },
-    { id: 'a',  label: 'A',        sharps: ['a'],          flats: ['a']   },
-    { id: 'a#', label: 'A♯ / B♭',  sharps: ['a#'],         flats: ['bb']  },
-    { id: 'b',  label: 'B',        sharps: ['b'],          flats: ['b']   }
+    { id:'c',  label:'C',        sharps:['c'],   flats:['c']  },
+    { id:'c#', label:'C♯ / D♭',  sharps:['c#'],  flats:['db'] },
+    { id:'d',  label:'D',        sharps:['d'],   flats:['d']  },
+    { id:'d#', label:'D♯ / E♭',  sharps:['d#'],  flats:['eb'] },
+    { id:'e',  label:'E',        sharps:['e'],   flats:['e']  },
+    { id:'f',  label:'F',        sharps:['f'],   flats:['f']  },
+    { id:'f#', label:'F♯ / G♭',  sharps:['f#'],  flats:['gb'] },
+    { id:'g',  label:'G',        sharps:['g'],   flats:['g']  },
+    { id:'g#', label:'G♯ / A♭',  sharps:['g#'],  flats:['ab'] },
+    { id:'a',  label:'A',        sharps:['a'],   flats:['a']  },
+    { id:'a#', label:'A♯ / B♭',  sharps:['a#'],  flats:['bb'] },
+    { id:'b',  label:'B',        sharps:['b'],   flats:['b']  }
   ];
-
-  // Map a pitch (e.g. 'eb', 'f#', 'd', 'bb') to its NOTE_CHOICES id.
-  // Handles enharmonic equivalents: 'eb' -> 'd#', 'db' -> 'c#', etc.
   const PITCH_TO_NOTE_ID = {
-    'c':   'c',
-    'c#':  'c#',  'db':  'c#',
-    'd':   'd',
-    'd#':  'd#',  'eb':  'd#',
-    'e':   'e',   'fb':  'e',
-    'f':   'f',   'e#':  'f',
-    'f#':  'f#',  'gb':  'f#',
-    'g':   'g',
-    'g#':  'g#',  'ab':  'g#',
-    'a':   'a',
-    'a#':  'a#',  'bb':  'a#',
-    'b':   'b',   'cb':  'b'
+    'c':'c','c#':'c#','db':'c#','d':'d','d#':'d#','eb':'d#',
+    'e':'e','fb':'e','f':'f','e#':'f','f#':'f#','gb':'f#',
+    'g':'g','g#':'g#','ab':'g#','a':'a','a#':'a#','bb':'a#',
+    'b':'b','cb':'b'
   };
-
-  // Get the canonical NOTE_CHOICES id for a VexFlow pitch like 'eb/4' or 'f#/3'
   function pitchToNoteId(vexPitch) {
-    const noteName = vexPitch.split('/')[0];
-    return PITCH_TO_NOTE_ID[noteName] || noteName.charAt(0);
+    const n = vexPitch.split('/')[0];
+    return PITCH_TO_NOTE_ID[n] || n.charAt(0);
   }
+  function getNoteChoiceById(id) { return NOTE_CHOICES.find(n => n.id === id); }
 
-  function getNoteChoiceById(id) {
-    return NOTE_CHOICES.find(n => n.id === id);
-  }
-
-  // ============ EXERCISE DATA (LEARN MODE) ============
-  // Each exercise defines pitches for both treble and bass clef.
-  // Range is C2 to C6 — four octaves spanning the full reading range.
-  // For descending intervals, modeA and modeB define the two interpretations.
-
+  // ============================================================
+  // EXERCISE DATA (Learn mode — C-major anchored, transposed on render)
+  // ============================================================
   const exercises = [
     {
-      title: "Perfect 5th Ascending — Middle Range",
-      prompt: "Root C, ascending to G, then sounded together. A comfortable starting register.",
-      intervalName: "Perfect 5th",
-      intervalId: "P5",
-      direction: "asc",
-      pitches: { treble: ['c/4', 'g/4'], bass: ['c/3', 'g/3'] }
+      title:"Perfect 5th Ascending — Middle Range",
+      prompt:"Root C, ascending to G, then sounded together. A comfortable starting register.",
+      intervalName:"Perfect 5th", intervalId:"P5", direction:"asc",
+      pitches:{ treble:['c/4','g/4'], bass:['c/3','g/3'] }
     },
     {
-      title: "Perfect 5th Descending — Middle Range",
-      prompt: "Root C, descending. Try both modes to compare where the second note lands.",
-      intervalName: "Perfect 5th",
-      intervalId: "P5",
-      direction: "desc",
-      modeA: { treble: ['c/4', 'g/3'], bass: ['c/4', 'g/3'] },
-      modeB: { treble: ['c/4', 'f/3'], bass: ['c/4', 'f/3'] }
+      title:"Perfect 5th Descending — Middle Range",
+      prompt:"Root C, descending. Try both modes to compare where the second note lands.",
+      intervalName:"Perfect 5th", intervalId:"P5", direction:"desc",
+      modeA:{ treble:['c/4','g/3'], bass:['c/4','g/3'] },
+      modeB:{ treble:['c/4','f/3'], bass:['c/4','f/3'] }
     },
     {
-      title: "Major 3rd Ascending — Lower Register",
-      prompt: "Root C in the lower register, ascending to E. In bass clef, this sits below the staff.",
-      intervalName: "Major 3rd",
-      intervalId: "M3",
-      direction: "asc",
-      pitches: { treble: ['c/3', 'e/3'], bass: ['c/2', 'e/2'] }
+      title:"Major 3rd Ascending — Lower Register",
+      prompt:"Root C in the lower register, ascending to E.",
+      intervalName:"Major 3rd", intervalId:"M3", direction:"asc",
+      pitches:{ treble:['c/3','e/3'], bass:['c/2','e/2'] }
     },
     {
-      title: "Minor 3rd Ascending — Middle Range",
-      prompt: "Root C, ascending to E♭. Notice the flat sign on the second note.",
-      intervalName: "Minor 3rd",
-      intervalId: "m3",
-      direction: "asc",
-      pitches: { treble: ['c/4', 'eb/4'], bass: ['c/3', 'eb/3'] }
+      title:"Minor 3rd Ascending — Middle Range",
+      prompt:"Root C, ascending to E♭. Notice the flat sign on the second note.",
+      intervalName:"Minor 3rd", intervalId:"m3", direction:"asc",
+      pitches:{ treble:['c/4','eb/4'], bass:['c/3','eb/3'] }
     },
     {
-      title: "Perfect 4th Ascending — Higher Register",
-      prompt: "Root C in a higher register, ascending to F. In treble clef, watch for ledger lines above.",
-      intervalName: "Perfect 4th",
-      intervalId: "P4",
-      direction: "asc",
-      pitches: { treble: ['c/5', 'f/5'], bass: ['c/4', 'f/4'] }
+      title:"Perfect 4th Ascending — Higher Register",
+      prompt:"Root C in a higher register, ascending to F.",
+      intervalName:"Perfect 4th", intervalId:"P4", direction:"asc",
+      pitches:{ treble:['c/5','f/5'], bass:['c/4','f/4'] }
     },
     {
-      title: "Perfect 4th Descending — Middle Range",
-      prompt: "Root C, descending. Try both modes to feel where each one lands.",
-      intervalName: "Perfect 4th",
-      intervalId: "P4",
-      direction: "desc",
-      modeA: { treble: ['c/4', 'f/3'], bass: ['c/4', 'f/3'] },
-      modeB: { treble: ['c/4', 'g/3'], bass: ['c/4', 'g/3'] }
+      title:"Perfect 4th Descending — Middle Range",
+      prompt:"Root C, descending. Try both modes to feel where each one lands.",
+      intervalName:"Perfect 4th", intervalId:"P4", direction:"desc",
+      modeA:{ treble:['c/4','f/3'], bass:['c/4','f/3'] },
+      modeB:{ treble:['c/4','g/3'], bass:['c/4','g/3'] }
     },
     {
-      title: "Major 6th Ascending — Lower Register",
-      prompt: "A larger leap from low C up to A. Significant ledger-line reading in the bass clef.",
-      intervalName: "Major 6th",
-      intervalId: "M6",
-      direction: "asc",
-      pitches: { treble: ['c/3', 'a/3'], bass: ['c/2', 'a/2'] }
+      title:"Major 6th Ascending — Lower Register",
+      prompt:"A larger leap from low C up to A.",
+      intervalName:"Major 6th", intervalId:"M6", direction:"asc",
+      pitches:{ treble:['c/3','a/3'], bass:['c/2','a/2'] }
     },
     {
-      title: "Octave Ascending — Upper Register",
-      prompt: "Root C in the upper register, ascending one full octave. The second note sits well above the treble staff.",
-      intervalName: "Octave",
-      intervalId: "P8",
-      direction: "asc",
-      pitches: { treble: ['c/5', 'c/6'], bass: ['c/4', 'c/5'] }
+      title:"Octave Ascending — Upper Register",
+      prompt:"Root C in the upper register, ascending one full octave.",
+      intervalName:"Octave", intervalId:"P8", direction:"asc",
+      pitches:{ treble:['c/5','c/6'], bass:['c/4','c/5'] }
     }
   ];
 
-  // ============ QUIZ EXERCISE GENERATOR ============
-  // Generates random exercises from the full pool of intervals, directions, and registers.
-  // Used by Quiz mode. Roots are based on the currently-selected key's tonic.
-
-  const NOTE_NAMES_SHARP = ['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b'];
-  const LETTER_NAMES = ['c', 'd', 'e', 'f', 'g', 'a', 'b'];
-
-  // Compute the second pitch for an interval using letter-step counting.
-  // This produces enharmonically correct names (m3 from C is E♭, not D♯).
+  // ============================================================
+  // PITCH MATH
+  // ============================================================
   function computeSecondPitch(rootPitch, interval, direction) {
-    const [rootNote, rootOctaveStr] = rootPitch.split('/');
-    const rootOctave = parseInt(rootOctaveStr, 10);
+    const [rootNote, rootOctStr] = rootPitch.split('/');
+    const rootOct = parseInt(rootOctStr, 10);
     const rootLetter = rootNote.charAt(0);
     const rootLetterIdx = LETTER_NAMES.indexOf(rootLetter);
-    const rootSemitone = NOTE_NAMES_SHARP.indexOf(rootNote);
-
-    let targetLetterIdx, targetOctave, targetSemitoneAbs;
-    const rootSemitoneAbs = rootSemitone + rootOctave * 12;
+    const rootSemi = NOTE_NAMES_SHARP.indexOf(rootNote);
+    const rootSemiAbs = rootSemi + rootOct * 12;
+    let tgtLetterIdx, tgtOct, tgtSemiAbs;
 
     if (direction === 'asc') {
-      const stepCount = rootLetterIdx + interval.letterStep;
-      targetLetterIdx = stepCount % 7;
-      targetOctave = rootOctave + Math.floor(stepCount / 7);
-      targetSemitoneAbs = rootSemitoneAbs + interval.semitones;
+      const step = rootLetterIdx + interval.letterStep;
+      tgtLetterIdx = step % 7;
+      tgtOct = rootOct + Math.floor(step / 7);
+      tgtSemiAbs = rootSemiAbs + interval.semitones;
     } else {
-      const stepCount = rootLetterIdx - interval.letterStep;
-      targetLetterIdx = ((stepCount % 7) + 7) % 7;
-      targetOctave = rootOctave + Math.floor(stepCount / 7);
-      targetSemitoneAbs = rootSemitoneAbs - interval.semitones;
+      const step = rootLetterIdx - interval.letterStep;
+      tgtLetterIdx = ((step % 7) + 7) % 7;
+      tgtOct = rootOct + Math.floor(step / 7);
+      tgtSemiAbs = rootSemiAbs - interval.semitones;
     }
 
-    const targetLetter = LETTER_NAMES[targetLetterIdx];
-    const naturalSemitoneAbs = NOTE_NAMES_SHARP.indexOf(targetLetter) + targetOctave * 12;
-    let accidentalDiff = targetSemitoneAbs - naturalSemitoneAbs;
-
-    let accidental = '';
-    if (accidentalDiff === 1) accidental = '#';
-    else if (accidentalDiff === -1) accidental = 'b';
-    else if (accidentalDiff === 2) accidental = '##';
-    else if (accidentalDiff === -2) accidental = 'bb';
-
-    return `${targetLetter}${accidental}/${targetOctave}`;
+    const tgtLetter = LETTER_NAMES[tgtLetterIdx];
+    const natSemiAbs = NOTE_NAMES_SHARP.indexOf(tgtLetter) + tgtOct * 12;
+    const diff = tgtSemiAbs - natSemiAbs;
+    const acc = diff === 1 ? '#' : diff === -1 ? 'b' : diff === 2 ? '##' : diff === -2 ? 'bb' : '';
+    return `${tgtLetter}${acc}/${tgtOct}`;
   }
 
-  // Mode A descending: target the same letter name as ascending would, but place it below the root.
   function computeSecondPitchModeA(rootPitch, interval) {
-    const [rootNote, rootOctaveStr] = rootPitch.split('/');
-    const rootOctave = parseInt(rootOctaveStr, 10);
-    const rootLetterIdx = LETTER_NAMES.indexOf(rootNote.charAt(0));
-    const targetLetterIdx = (rootLetterIdx + interval.letterStep) % 7;
-    const targetLetter = LETTER_NAMES[targetLetterIdx];
-
-    // Place targetLetter in the closest octave below the root
-    const rootSemitoneAbs = NOTE_NAMES_SHARP.indexOf(rootNote) + rootOctave * 12;
-    let bestOctave = rootOctave - 1;
-    for (let oct = rootOctave; oct >= rootOctave - 2; oct--) {
-      const candAbs = NOTE_NAMES_SHARP.indexOf(targetLetter) + oct * 12;
-      if (candAbs < rootSemitoneAbs) { bestOctave = oct; break; }
+    const [rootNote, rootOctStr] = rootPitch.split('/');
+    const rootOct = parseInt(rootOctStr, 10);
+    const tgtLetterIdx = (LETTER_NAMES.indexOf(rootNote.charAt(0)) + interval.letterStep) % 7;
+    const tgtLetter = LETTER_NAMES[tgtLetterIdx];
+    const rootSemiAbs = NOTE_NAMES_SHARP.indexOf(rootNote) + rootOct * 12;
+    let bestOct = rootOct - 1;
+    for (let o = rootOct; o >= rootOct - 2; o--) {
+      if (NOTE_NAMES_SHARP.indexOf(tgtLetter) + o * 12 < rootSemiAbs) { bestOct = o; break; }
     }
-    return `${targetLetter}/${bestOctave}`;
+    return `${tgtLetter}/${bestOct}`;
   }
 
-  // Pick a root octave that keeps both notes within a clef-appropriate visible range for the current key.
   function pickRandomRootOctave(direction, interval, clef, key) {
-    const tonicSemitone = LETTER_SEMITONES[key.tonicLetter];
-    // Clef-appropriate absolute semitone bounds
+    const tonicBase = key.tonicLetter.charAt(0);
+    const tonicSemi = LETTER_SEMITONES[tonicBase] || 0;
+    // Treble: root from A3 (lo=45) to C6 (hi=72), so both notes in A3–C6 range
+    // Bass: root from C2 (lo=24) to E4 (hi=64), both notes in C2–E4 range
     const bounds = clef === 'treble'
-      ? { lowAbs: 36 + 7, highAbs: 84 }   // ~G3 to C7 (extended for higher keys)
-      : { lowAbs: 24,     highAbs: 48 + 4 }; // C2 to E4
-
-    const candidates = [];
-    for (let oct = 1; oct <= 6; oct++) {
-      const rootAbs = oct * 12 + tonicSemitone;
-      let secondAbs;
-      if (direction === 'asc') {
-        secondAbs = rootAbs + interval.semitones;
-      } else {
-        secondAbs = rootAbs - interval.semitones;
-      }
-      if (rootAbs >= bounds.lowAbs && rootAbs <= bounds.highAbs &&
-          secondAbs >= bounds.lowAbs && secondAbs <= bounds.highAbs) {
-        candidates.push(oct);
-      }
+      ? { lo: 45, hi: 72 }
+      : { lo: 24, hi: 64 };
+    const cands = [];
+    for (let o = 1; o <= 6; o++) {
+      const rAbs = o * 12 + tonicSemi;
+      const sAbs = direction === 'asc' ? rAbs + interval.semitones : rAbs - interval.semitones;
+      if (rAbs >= bounds.lo && rAbs <= bounds.hi && sAbs >= bounds.lo && sAbs <= bounds.hi) cands.push(o);
     }
-    if (candidates.length === 0) return clef === 'treble' ? 4 : 3;
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    return cands.length ? cands[Math.floor(Math.random() * cands.length)]
+                        : (clef === 'treble' ? 4 : 3);
+  }
+
+  // Generate a single learn-mode exercise respecting the current interval filter,
+  // clef, and key. Returns {pitches, intervalName, intervalId, direction, clef, keyId}.
+  function generateLearnExercise() {
+    const pool = currentIntervalId === 'all'
+      ? INTERVALS
+      : INTERVALS.filter(iv => iv.id === currentIntervalId);
+    const interval = pool[Math.floor(Math.random() * pool.length)];
+    const direction = currentDirection === 'both'
+      ? (Math.random() < 0.5 ? 'asc' : 'desc')
+      : currentDirection;
+    const lClef = currentClef === 'both'
+      ? (Math.random() < 0.5 ? 'treble' : 'bass')
+      : currentClef;
+    const key = getCurrentKey();
+    const rootOct = pickRandomRootOctave(direction, interval, lClef, key);
+    const rootPitch = `${key.tonicLetter}/${rootOct}`;
+    let secondPitch;
+    if (direction === 'asc') {
+      secondPitch = computeSecondPitch(rootPitch, interval, 'asc');
+    } else if (currentMode === 'A' && interval.perfect) {
+      secondPitch = computeSecondPitchModeA(rootPitch, interval);
+    } else {
+      secondPitch = computeSecondPitch(rootPitch, interval, 'desc');
+    }
+    return { intervalId: interval.id, intervalName: interval.label,
+             direction, clef: lClef, keyId: key.id, pitches: [rootPitch, secondPitch] };
   }
 
   function generateQuizExercise() {
-    const interval = INTERVALS[Math.floor(Math.random() * INTERVALS.length)];
-    const direction = Math.random() < 0.5 ? 'asc' : 'desc';
-    const clef = Math.random() < 0.5 ? 'treble' : 'bass';
+    const pool = currentIntervalId === 'all'
+      ? INTERVALS
+      : INTERVALS.filter(iv => iv.id === currentIntervalId);
+    const interval = pool[Math.floor(Math.random() * pool.length)];
+    const direction = currentDirection === 'both'
+      ? (Math.random() < 0.5 ? 'asc' : 'desc')
+      : currentDirection;
+    const qClef = currentClef === 'both'
+      ? (Math.random() < 0.5 ? 'treble' : 'bass')
+      : currentClef;
     const key = getCurrentKey();
-    const rootOctave = pickRandomRootOctave(direction, interval, clef, key);
-    const rootPitch = `${key.tonicLetter}/${rootOctave}`;
+    const rootOct = pickRandomRootOctave(direction, interval, qClef, key);
+    const rootPitch = `${key.tonicLetter}/${rootOct}`;
 
     let secondPitch;
     if (direction === 'asc') {
@@ -1126,62 +1118,51 @@
       secondPitch = computeSecondPitch(rootPitch, interval, 'desc');
     }
 
-    return {
-      intervalId: interval.id,
-      intervalName: interval.label,
-      direction: direction,
-      clef: clef,
-      keyId: key.id,
-      pitches: [rootPitch, secondPitch]
-    };
+    return { intervalId:interval.id, intervalName:interval.label, direction, clef:qClef,
+             keyId:key.id, pitches:[rootPitch, secondPitch] };
   }
 
-  // ============ STATE ============
-  let currentIndex = 0;
-  let currentClef = 'treble';
-  let currentMode = 'A';
-  let currentActivity = 'learn'; // 'learn' or 'quiz'
-  let currentKeyId = 'C-major';
-  let audioReady = false;
-  let sampler = null;
-
-  // Quiz-specific state
-  let currentQuiz = null;
-  let quizAttempts = 0;
-  let quizComplete = false;
+  // ============================================================
+  // STATE
+  // ============================================================
+  let currentIndex   = 0;
+  let currentClef    = 'treble';   // 'treble' | 'bass' | 'both'
+  let currentMode    = 'A';
+  let currentActivity = 'learn';
+  let currentKeyId   = 'C-major';
+  let currentIntervalId = 'all'; // 'all' or a specific interval id like 'P5'
+  let currentDirection  = 'asc';  // 'asc' | 'desc' | 'both'
+  let currentLearnEx = null;     // current dynamically-generated learn exercise
+  let audioReady     = false;
+  let sampler        = null;
+  let currentQuiz    = null;
+  let quizAttempts   = 0;
+  let quizComplete   = false;
   const MAX_QUIZ_ATTEMPTS = 3;
 
   function getCurrentKey() { return KEYS[currentKeyId]; }
 
-  // Transpose a C-major exercise's pitches to the current key by replacing the C root with the key's tonic
-  // and recomputing the second note based on the interval and direction. Keeps the octave register approximately
-  // the same as the original C-major exercise so visual layout stays comparable.
   function transposeExerciseToKey(ex, key, clef) {
+    const resolvedClef = clef === 'both' ? 'treble' : clef;
+
     if (key.id === 'C-major') {
-      // No transposition needed
-      if (ex.direction === 'asc') return ex.pitches[clef];
-      return currentMode === 'A' && getIntervalById(ex.intervalId).perfect
-        ? ex.modeA[clef]
-        : ex.modeB[clef];
+      if (ex.direction === 'asc') return ex.pitches[resolvedClef];
+      return (currentMode === 'A' && getIntervalById(ex.intervalId).perfect)
+        ? ex.modeA[resolvedClef] : ex.modeB[resolvedClef];
     }
 
-    // For non-C keys, get the original C-major pitches and re-root them
-    const originalPitches = ex.direction === 'asc'
-      ? ex.pitches[clef]
-      : (currentMode === 'A' && getIntervalById(ex.intervalId).perfect ? ex.modeA[clef] : ex.modeB[clef]);
-    const [originalRoot] = originalPitches;
-    const [, originalRootOctaveStr] = originalRoot.split('/');
-    const originalRootOctave = parseInt(originalRootOctaveStr, 10);
+    const srcPitches = ex.direction === 'asc'
+      ? ex.pitches[resolvedClef]
+      : ((currentMode === 'A' && getIntervalById(ex.intervalId).perfect)
+          ? ex.modeA[resolvedClef] : ex.modeB[resolvedClef]);
 
-    // Build the new root: same octave as the original C, with the key's tonic letter
-    let newRootOctave = originalRootOctave;
-    // If the tonic is higher in pitch than C, ensure we don't accidentally go above C6
-    // For E minor: E2 < C3, so E3 sits below C4. Adjust to keep the tonic-rooted pitch within reading range.
-    const tonicSemitone = LETTER_SEMITONES[key.tonicLetter];
-    if (tonicSemitone > 0 && (newRootOctave * 12 + tonicSemitone) > 72) newRootOctave--;
-    const newRoot = `${key.tonicLetter}/${newRootOctave}`;
+    const origOct = parseInt(srcPitches[0].split('/')[1], 10);
+    let newOct = origOct;
+    const tonicBase = key.tonicLetter.charAt(0);
+    const tonicSemi = LETTER_SEMITONES[tonicBase] || 0;
+    if (tonicSemi > 0 && (newOct * 12 + tonicSemi) > 72) newOct--;
 
-    // Compute the new second note using the same interval and direction logic
+    const newRoot = `${key.tonicLetter}/${newOct}`;
     const interval = getIntervalById(ex.intervalId);
     let newSecond;
     if (ex.direction === 'asc') {
@@ -1191,304 +1172,372 @@
     } else {
       newSecond = computeSecondPitch(newRoot, interval, 'desc');
     }
-
-    // Apply the key signature: any natural note that's altered by the key sig gets the implicit accidental
-    // BUT for display in VexFlow, the key signature handles this automatically — we only add explicit accidentals
-    // when the actual pitch differs from what the key signature implies.
-    // So: if computeSecondPitch produced 'f' in a key with F# implicit, we want the staff to NOT show an accidental
-    // on F (the key sig handles it). We do this by NOT applying the key sig to the pitch data, but instead
-    // letting VexFlow's key signature take care of it. The accidental we DO add is when the note is NOT in the key.
     return [newRoot, newSecond];
   }
 
-  // ============ AUDIO SETUP ============
-  // Salamander Grand Piano samples hosted on the Tone.js project's CDN.
-  // The default set samples every minor third — Tone.js will pitch-shift to fill in others.
-  // For our C3-C5 range, this is well within the sweet spot of the sample set.
-
+  // ============================================================
+  // AUDIO SETUP
+  // ============================================================
   const SALAMANDER_BASE = "https://tonejs.github.io/audio/salamander/";
-
-  const audioStatusEl = document.getElementById('audioStatus');
+  const audioStatusEl   = document.getElementById('audioStatus');
   const audioStatusText = document.getElementById('audioStatusText');
 
-  /* v0.1.0: Auto-start audio pattern (no Enable Audio button).
-
-     Two things happen independently:
-
-     (1) The Tone.Sampler begins loading piano samples immediately on
-         page load. This is the slow part (~30 HTTP requests for the
-         sample MP3s) and we want it to be over by the time the user
-         is ready to press Play.
-
-     (2) The Web Audio context can't actually *play* anything until
-         it's been resumed in response to a user gesture — browsers
-         require this to prevent autoplaying ads. So we attach a
-         one-time listener to the first interaction (click, keydown,
-         touchstart) that calls Tone.start() to resolve the context.
-
-     Most users never see this two-step happening: by the time they
-     click anything, the sampler is loaded and the context resumes
-     instantly. The status banner just shows "Loading…" then "Ready"
-     and auto-hides. */
-
   let contextResumed = false;
-  function resumeAudioContext() {
+  function resumeAudioCtx() {
     if (contextResumed) return;
     contextResumed = true;
-    Tone.start().catch(err => console.warn('Audio context resume failed:', err));
+    Tone.start().catch(e => console.warn('Audio resume failed:', e));
   }
-  // Resume on any of the common first-gesture events. The {once: true}
-  // option auto-removes the listener after firing, so this is a
-  // one-shot setup.
-  ['click', 'keydown', 'touchstart'].forEach(evt => {
-    document.addEventListener(evt, resumeAudioContext, { once: true, passive: true });
-  });
+  ['click','keydown','touchstart'].forEach(ev =>
+    document.addEventListener(ev, resumeAudioCtx, { once:true, passive:true }));
 
-  // Begin loading samples immediately.
   sampler = new Tone.Sampler({
-    urls: {
-      "A0":  "A0.mp3",
-      "C1":  "C1.mp3",
-      "D#1": "Ds1.mp3",
-      "F#1": "Fs1.mp3",
-      "A1":  "A1.mp3",
-      "C2":  "C2.mp3",
-      "D#2": "Ds2.mp3",
-      "F#2": "Fs2.mp3",
-      "A2":  "A2.mp3",
-      "C3":  "C3.mp3",
-      "D#3": "Ds3.mp3",
-      "F#3": "Fs3.mp3",
-      "A3":  "A3.mp3",
-      "C4":  "C4.mp3",
-      "D#4": "Ds4.mp3",
-      "F#4": "Fs4.mp3",
-      "A4":  "A4.mp3",
-      "C5":  "C5.mp3",
-      "D#5": "Ds5.mp3",
-      "F#5": "Fs5.mp3",
-      "A5":  "A5.mp3",
-      "C6":  "C6.mp3",
-      "D#6": "Ds6.mp3",
-      "F#6": "Fs6.mp3",
-      "A6":  "A6.mp3",
-      "C7":  "C7.mp3",
-      "D#7": "Ds7.mp3",
-      "F#7": "Fs7.mp3",
-      "A7":  "A7.mp3",
-      "C8":  "C8.mp3"
+    urls:{
+      "A0":"A0.mp3","C1":"C1.mp3","D#1":"Ds1.mp3","F#1":"Fs1.mp3",
+      "A1":"A1.mp3","C2":"C2.mp3","D#2":"Ds2.mp3","F#2":"Fs2.mp3",
+      "A2":"A2.mp3","C3":"C3.mp3","D#3":"Ds3.mp3","F#3":"Fs3.mp3",
+      "A3":"A3.mp3","C4":"C4.mp3","D#4":"Ds4.mp3","F#4":"Fs4.mp3",
+      "A4":"A4.mp3","C5":"C5.mp3","D#5":"Ds5.mp3","F#5":"Fs5.mp3",
+      "A5":"A5.mp3","C6":"C6.mp3","D#6":"Ds6.mp3","F#6":"Fs6.mp3",
+      "A6":"A6.mp3","C7":"C7.mp3","D#7":"Ds7.mp3","F#7":"Fs7.mp3",
+      "A7":"A7.mp3","C8":"C8.mp3"
     },
-    release: 1.2,
-    baseUrl: SALAMANDER_BASE,
-    onload: () => {
+    release:1.2, baseUrl:SALAMANDER_BASE,
+    onload:() => {
       audioReady = true;
-      audioStatusEl.classList.remove('loading');
-      audioStatusEl.classList.add('ready');
+      audioStatusEl.classList.replace('loading','ready');
       audioStatusText.textContent = "Piano samples loaded — audio ready.";
-      // Enable all play buttons.
       ['playBtn','playRootBtn','playSecondBtn','playHarmonicBtn','revealNotesBtn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.disabled = false;
       });
-      // Auto-hide the ready banner after a moment.
       setTimeout(() => audioStatusEl.classList.add('hidden'), 2500);
     },
-    onerror: (err) => {
+    onerror:(err) => {
       audioStatusEl.classList.remove('loading');
-      audioStatusText.textContent = "Audio failed to load. You can still view exercises silently.";
+      audioStatusText.textContent = "Audio failed to load. Exercises still visible.";
       console.error("Audio load error:", err);
     }
   }).toDestination();
-
   sampler.volume.value = -6;
 
-  // Convert VexFlow pitch notation ('eb/4') to Tone.js notation ('Eb4')
-  function vexToTone(vexPitch) {
-    const [note, octave] = vexPitch.split('/');
-    const formatted = note.charAt(0).toUpperCase() + note.slice(1);
-    return formatted + octave;
+  function vexToTone(p) {
+    const [n, o] = p.split('/');
+    return n.charAt(0).toUpperCase() + n.slice(1) + o;
   }
-
-  function playNotes(vexPitches, durations) {
+  function playNotes(pitches, durs) {
     if (!audioReady || !sampler) return;
     const now = Tone.now();
-    let offset = 0;
-    // Slower, more contemplative pacing — gives the ear time to settle on each pitch.
-    // Using seconds directly so note ring-time matches the spacing between onsets.
-    const QUARTER_SEC = 0.9;
-    const HALF_SEC = 1.8;
-    vexPitches.forEach((pitchOrChord, i) => {
-      const dur = durations[i];
-      const seconds = dur === '4n' ? QUARTER_SEC : dur === '2n' ? HALF_SEC : QUARTER_SEC;
-      const tonePitches = Array.isArray(pitchOrChord)
-        ? pitchOrChord.map(vexToTone)
-        : [vexToTone(pitchOrChord)];
-      sampler.triggerAttackRelease(tonePitches, seconds, now + offset);
-      offset += seconds;
+    let off = 0;
+    pitches.forEach((item, i) => {
+      const secs = durs[i] === '2n' ? 1.8 : 0.9;
+      const tp = Array.isArray(item) ? item.map(vexToTone) : [vexToTone(item)];
+      sampler.triggerAttackRelease(tp, secs, now + off);
+      off += secs;
     });
   }
 
-  // ============ RENDERING ============
+  // ============================================================
+  // VEXFLOW RENDERING
+  // ============================================================
   const VF = Vex.Flow;
 
-  function getCurrentPitches() {
-    if (currentActivity === 'quiz') {
-      return currentQuiz ? currentQuiz.pitches : ['c/4', 'g/4'];
-    }
-    const key = getCurrentKey();
-    return transposeExerciseToKey(exercises[currentIndex], key, currentClef);
+  // Attach accidental modifiers to a StaveNote.
+  // pitchOrPitches: single pitch string or array (for chord note at beat 3).
+  function addAccidentals(staveNote, pitchOrPitches, key) {
+    const arr = Array.isArray(pitchOrPitches) ? pitchOrPitches : [pitchOrPitches];
+    arr.forEach((p, ki) => {
+      const name = p.split('/')[0];
+      const letter = name.charAt(0);
+      const expAcc = name.substring(1);
+      const sigAcc = key && key.sharps.includes(letter) ? '#'
+                   : key && key.flats.includes(letter)  ? 'b' : '';
+
+      if (expAcc === sigAcc) return; // key sig handles it
+      const mod = expAcc === '' && sigAcc !== '' ? 'n'
+                : expAcc === 'bb' ? 'bb' : expAcc === '##' ? '##'
+                : expAcc === 'b'  ? 'b'  : expAcc === '#'  ? '#' : null;
+      if (mod) staveNote.addModifier(new VF.Accidental(mod), ki);
+    });
   }
 
-  function getCurrentClef() {
-    return currentActivity === 'quiz' && currentQuiz ? currentQuiz.clef : currentClef;
+  // Whether a key signature needs to be drawn on the stave.
+  function needsKeySig(key) {
+    if (!key) return false;
+    return key.sharps.length > 0 || key.flats.length > 0;
   }
 
-  function getCurrentDirection() {
-    if (currentActivity === 'quiz') return currentQuiz ? currentQuiz.direction : 'asc';
-    return exercises[currentIndex].direction;
+  // After VexFlow renders, ensure the SVG has a white background rect as its first child.
+  // This guarantees black-on-white rendering without any fill/stroke CSS overrides
+  // (which break ledger lines by mis-coloring VexFlow's internal rects and paths).
+  function patchSvgBackground(container) {
+    const svg = container.querySelector('svg');
+    if (!svg) return;
+    // Don't add twice
+    if (svg.querySelector('.vf-bg-rect')) return;
+    const w = parseFloat(svg.getAttribute('width') || svg.viewBox.baseVal.width || 560);
+    const h = parseFloat(svg.getAttribute('height') || svg.viewBox.baseVal.height || 200);
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('class', 'vf-bg-rect');
+    rect.setAttribute('x', '0');
+    rect.setAttribute('y', '0');
+    rect.setAttribute('width', w + 20);   // slightly oversized to cover any overflow
+    rect.setAttribute('height', h + 60);  // extra height for ledger lines above/below
+    rect.setAttribute('fill', '#ffffff');
+    svg.insertBefore(rect, svg.firstChild);
   }
 
-  function pitchToReadable(vexPitch) {
-    const [note, octave] = vexPitch.split('/');
-    let display = note.charAt(0).toUpperCase();
-    if (note.length > 1) {
-      const accidental = note.substring(1);
-      if (accidental === 'b') display += '♭';
-      else if (accidental === 'bb') display += '𝄫';
-      else if (accidental === '#') display += '♯';
-      else if (accidental === '##') display += '𝄪';
-    }
-    return display + octave;
+  function buildStaveNotes(pitches, clef, key) {
+    const notes = [
+      new VF.StaveNote({ keys:[pitches[0]], duration:'q', clef }),
+      new VF.StaveNote({ keys:[pitches[1]], duration:'q', clef }),
+      new VF.StaveNote({ keys:pitches,      duration:'q', clef })
+    ];
+    notes.forEach((n, i) => addAccidentals(n, i < 2 ? pitches[i] : pitches, key));
+    return notes;
   }
 
-  // Render the staff for whatever pitches/clef/key are currently active.
-  // Accidentals are only drawn explicitly when the pitch differs from what the key signature implies.
   function renderStaff(pitches, clef, key) {
     const container = document.getElementById('staveContainer');
     container.innerHTML = '';
 
-    const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
-    renderer.resize(560, 160);
-    const context = renderer.getContext();
+    // Remove any previous "both-clef" explanation note
+    const oldNote = document.getElementById('bothClefNote');
+    if (oldNote) oldNote.remove();
 
-    const stave = new VF.Stave(10, 20, 530);
-    stave.addClef(clef).addTimeSignature('3/4');
-    if (key && key.vexKeySig !== 'C') {
-      stave.addKeySignature(key.vexKeySig);
+    if (clef === 'both') {
+      renderGrandStaff(pitches, key, container);
+      // Insert explanation strip after the stave container
+      const note = document.createElement('p');
+      note.id = 'bothClefNote';
+      note.style.cssText = `
+        font-size: 0.78rem; font-style: italic; color: var(--ink-mute);
+        padding: 0.4rem 0.6rem; margin: 0 0 0.6rem;
+        border-left: 2px solid var(--accent-dim); background: var(--surface2);
+      `;
+      note.textContent =
+        'Both clefs shown for visual reference. Audio plays the treble-clef octave. ' +
+        'The bass staff shows the same interval one octave lower — same shape on the page, lower in pitch.';
+      container.insertAdjacentElement('afterend', note);
+    } else {
+      // SVG height: stave y=40 gives 40px headroom above for ledger lines,
+      // stave itself is ~40px tall (5 lines × 8px spacing = ~40px + padding),
+      // then ~50px below for ledger lines under the staff. Total: 200px.
+      renderSingleStaff(container, pitches, clef, key, 560, 220, 10, 60, true);
     }
-    stave.setContext(context).draw();
+  }
 
-    const notes = [
-      new VF.StaveNote({ keys: [pitches[0]], duration: 'q', clef: clef }),
-      new VF.StaveNote({ keys: [pitches[1]], duration: 'q', clef: clef }),
-      new VF.StaveNote({ keys: pitches, duration: 'q', clef: clef })
-    ];
+  function renderSingleStaff(container, pitches, clef, key, w, h, x, y, showTimeSig) {
+    const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+    renderer.resize(w, h);
+    const ctx = renderer.getContext();
 
-    notes.forEach((note, idx) => {
-      const keysForThisNote = idx < 2 ? [pitches[idx]] : pitches;
-      keysForThisNote.forEach((key_, keyIdx) => {
-        const noteName = key_.split('/')[0];
-        const letter = noteName.charAt(0);
-        const explicitAccidental = noteName.substring(1);
+    const stave = new VF.Stave(x, y, w - x - 10);
+    stave.addClef(clef);
+    if (showTimeSig) stave.addTimeSignature('3/4');
+    if (needsKeySig(key)) stave.addKeySignature(key.vexKeySig);
+    stave.setContext(ctx).draw();
 
-        // Determine what the key signature implies for this letter
-        let keySigAccidental = '';
-        if (key && key.sharps.includes(letter)) keySigAccidental = '#';
-        else if (key && key.flats.includes(letter)) keySigAccidental = 'b';
+    VF.Formatter.FormatAndDraw(ctx, stave, buildStaveNotes(pitches, clef, key));
+    patchSvgBackground(container);
+  }
 
-        // Only add an accidental modifier if the actual accidental differs from the key signature's implication.
-        // E.g., in G major (F# implicit), a note 'f#/4' needs no modifier (key sig handles it);
-        // but 'f/4' (natural F in G major) would need an explicit natural sign.
-        if (explicitAccidental === keySigAccidental) {
-          // No modifier needed — the key signature does the work
-        } else if (explicitAccidental === '' && keySigAccidental !== '') {
-          // Natural sign needed to cancel the key signature
-          note.addModifier(new VF.Accidental('n'), keyIdx);
-        } else if (explicitAccidental === 'bb') {
-          note.addModifier(new VF.Accidental('bb'), keyIdx);
-        } else if (explicitAccidental === '##') {
-          note.addModifier(new VF.Accidental('##'), keyIdx);
-        } else if (explicitAccidental === 'b') {
-          note.addModifier(new VF.Accidental('b'), keyIdx);
-        } else if (explicitAccidental === '#') {
-          note.addModifier(new VF.Accidental('#'), keyIdx);
-        }
-      });
+  function renderGrandStaff(pitches, key, container) {
+    const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+    renderer.resize(560, 360);
+    const ctx = renderer.getContext();
+
+    // Treble stave
+    const treble = new VF.Stave(10, 70, 530);
+    treble.addClef('treble').addTimeSignature('3/4');
+    if (needsKeySig(key)) treble.addKeySignature(key.vexKeySig);
+    treble.setContext(ctx).draw();
+    VF.Formatter.FormatAndDraw(ctx, treble, buildStaveNotes(pitches, 'treble', key));
+
+    // Bass stave — same interval one octave lower
+    const bassPitches = pitches.map(p => {
+      const [n, o] = p.split('/');
+      return `${n}/${parseInt(o, 10) - 1}`;
     });
+    const bass = new VF.Stave(10, 210, 530);
+    bass.addClef('bass');
+    if (needsKeySig(key)) bass.addKeySignature(key.vexKeySig);
+    bass.setContext(ctx).draw();
+    VF.Formatter.FormatAndDraw(ctx, bass, buildStaveNotes(bassPitches, 'bass', key));
+    patchSvgBackground(container);
+  }
 
-    VF.Formatter.FormatAndDraw(context, stave, notes);
+  // ============================================================
+  // NOTE REFERENCE RENDERING
+  // Draws every natural note on the staff with its letter name as
+  // an SVG text label below. Ledger-line notes shown in accent gold.
+  // ============================================================
+  function renderNoteReference() {
+    renderRefStaff('noteRefTreble', 'treble');
+    renderRefStaff('noteRefBass',   'bass');
+  }
+
+  function renderRefStaff(containerId, clef) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    // Notes to display on this clef reference staff
+    const noteData = clef === 'treble'
+      ? [
+          { pitch:'c/4', label:'C',  ledger:true  },   // middle C ledger line
+          { pitch:'d/4', label:'D',  ledger:false },
+          { pitch:'e/4', label:'E',  ledger:false },
+          { pitch:'f/4', label:'F',  ledger:false },
+          { pitch:'g/4', label:'G',  ledger:false },
+          { pitch:'a/4', label:'A',  ledger:false },
+          { pitch:'b/4', label:'B',  ledger:false },
+          { pitch:'c/5', label:'C',  ledger:false },
+          { pitch:'d/5', label:'D',  ledger:false },
+          { pitch:'e/5', label:'E',  ledger:false },
+          { pitch:'f/5', label:'F',  ledger:false },
+          { pitch:'g/5', label:'G',  ledger:false },
+          { pitch:'a/5', label:'A',  ledger:true  },   // ledger line above
+        ]
+      : [
+          { pitch:'e/2', label:'E',  ledger:true  },   // ledger line below bass
+          { pitch:'f/2', label:'F',  ledger:false },
+          { pitch:'g/2', label:'G',  ledger:false },
+          { pitch:'a/2', label:'A',  ledger:false },
+          { pitch:'b/2', label:'B',  ledger:false },
+          { pitch:'c/3', label:'C',  ledger:false },
+          { pitch:'d/3', label:'D',  ledger:false },
+          { pitch:'e/3', label:'E',  ledger:false },
+          { pitch:'f/3', label:'F',  ledger:false },
+          { pitch:'g/3', label:'G',  ledger:false },
+          { pitch:'a/3', label:'A',  ledger:false },
+          { pitch:'b/3', label:'B',  ledger:false },
+          { pitch:'c/4', label:'C',  ledger:true  },   // middle C ledger line above bass
+        ];
+
+    const n = noteData.length;
+    const svgW = Math.max(560, n * 40 + 90);
+    // stave at y=55 gives 55px headroom above for ledger lines.
+    // stave ~40px tall. Below: ~55px for ledger lines + label row. Total: 215px.
+    const svgH = 215;
+    const staveY = 55;
+
+    const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+    renderer.resize(svgW, svgH);
+    const ctx = renderer.getContext();
+
+    const stave = new VF.Stave(10, staveY, svgW - 25);
+    stave.addClef(clef);
+    stave.setContext(ctx).draw();
+
+    const vfNotes = noteData.map(nd =>
+      new VF.StaveNote({ keys:[nd.pitch], duration:'q', clef })
+    );
+
+    VF.Formatter.FormatAndDraw(ctx, stave, vfNotes);
+    patchSvgBackground(container);
+
+    // Overlay letter labels as SVG <text> elements below each note
+    const svgEl = container.querySelector('svg');
+    if (!svgEl) return;
+
+    vfNotes.forEach((vn, i) => {
+      const nd = noteData[i];
+      let x = null;
+      try { x = vn.getAbsoluteX ? vn.getAbsoluteX() : null; } catch(e) {}
+      if (x === null) return;
+
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', x);
+      txt.setAttribute('y', svgH - 8);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-family', 'JetBrains Mono, monospace');
+      txt.setAttribute('font-size',   nd.ledger ? '12' : '11');
+      txt.setAttribute('font-weight', nd.ledger ? '600' : '400');
+      txt.setAttribute('fill',        nd.ledger ? '#d4a24c' : '#a89880');
+      txt.textContent = nd.label;
+      svgEl.appendChild(txt);
+    });
+  }
+
+  // ============================================================
+  // EXERCISE RENDERING
+  // ============================================================
+  function getCurrentPitches() {
+    if (currentActivity === 'quiz') return currentQuiz ? currentQuiz.pitches : ['c/4','g/4'];
+    return currentLearnEx ? currentLearnEx.pitches : ['c/4','g/4'];
+  }
+
+  function pitchToReadable(p) {
+    const [n, o] = p.split('/');
+    let d = n.charAt(0).toUpperCase();
+    const acc = n.substring(1);
+    if (acc === '#') d += '♯'; else if (acc === 'b') d += '♭';
+    else if (acc === '##') d += '𝄪'; else if (acc === 'bb') d += '𝄫';
+    return d + o;
   }
 
   function renderLearnExercise() {
-    const ex = exercises[currentIndex];
-    const key = getCurrentKey();
-    const pitches = transposeExerciseToKey(ex, key, currentClef);
+    // Always generate a fresh exercise if none exists yet or if something changed
+    if (!currentLearnEx) currentLearnEx = generateLearnExercise();
+    const ex     = currentLearnEx;
+    const key    = KEYS[ex.keyId] || getCurrentKey();
+    const pitches = ex.pitches;
+    const clefForRender = ex.clef;
 
-    document.getElementById('exerciseNumber').textContent =
-      `Exercise ${currentIndex + 1} of ${exercises.length}`;
-    document.getElementById('exerciseTitle').textContent = ex.title;
-    document.getElementById('exercisePrompt').textContent = ex.prompt;
-    document.getElementById('navStatus').textContent =
-      `Exercise ${currentIndex + 1} of ${exercises.length}`;
-
-    const note1 = pitchToReadable(pitches[0]);
-    const note2 = pitchToReadable(pitches[1]);
-    const clefName = currentClef === 'treble' ? 'Treble clef' : 'Bass clef';
-    const modeNote = ex.direction === 'desc' && getIntervalById(ex.intervalId).perfect
+    const ivLabel = getIntervalById(ex.intervalId).label;
+    const dirLabel = ex.direction === 'asc' ? 'Ascending' : 'Descending';
+    const modeTag = ex.direction === 'desc' && getIntervalById(ex.intervalId).perfect
       ? ` · Mode ${currentMode}` : '';
-    const visibleDesc = `${clefName} · Key of ${key.displayName} · 3/4 · Notes: ${note1}, ${note2} · Harmonic interval${modeNote}`;
-    const modeDescSR = ex.direction === 'desc' && getIntervalById(ex.intervalId).perfect
-      ? `, Mode ${currentMode}: ${currentMode === 'A' ? 'interval recognition' : 'root-relative'}` : '';
-    const ariaDesc = `${clefName}, key of ${key.displayName}, 3/4 time. Notes: ${note1}, ${note2}, then sounded together as a harmonic ${ex.intervalName.toLowerCase()}${modeDescSR}.`;
 
+    document.getElementById('exerciseNumber').textContent = 'Learn';
+    document.getElementById('navStatus').textContent      = `Learn · ${key.displayName}`;
+    document.getElementById('exerciseTitle').textContent  = `${ivLabel} ${dirLabel}`;
+    document.getElementById('exercisePrompt').textContent =
+      `Root ${pitchToReadable(pitches[0])}, ${ex.direction === 'asc' ? 'ascending to' : 'descending to'} ${pitchToReadable(pitches[1])}, then sounded together.`;
+
+    const clefName = clefForRender === 'bass' ? 'Bass clef' : 'Treble clef';
     document.getElementById('exerciseDescription').innerHTML =
-      `<strong>Reading:</strong> ${visibleDesc}`;
-    document.getElementById('staveContainer').setAttribute('aria-label', ariaDesc);
+      `<strong>Reading:</strong> ${clefName} · ${key.displayName}${modeTag}`;
+    document.getElementById('staveContainer').setAttribute('aria-label',
+      `${clefName}, key of ${key.displayName}. ${ivLabel} ${dirLabel}.`);
 
-    renderStaff(pitches, currentClef, key);
-
-    // Hide the reveal panel when navigating to a new exercise — user must click Reveal again
+    renderStaff(pitches, clefForRender, key);
     document.getElementById('revealPanel').classList.add('hidden');
-
-    document.getElementById('prevBtn').disabled = currentIndex === 0;
-    document.getElementById('nextBtn').disabled = currentIndex === exercises.length - 1;
+    document.getElementById('prevBtn').disabled = false;
+    document.getElementById('nextBtn').disabled = false;
   }
 
   function renderQuizExercise() {
     if (!currentQuiz) currentQuiz = generateQuizExercise();
-    const q = currentQuiz;
+    const q   = currentQuiz;
     const key = KEYS[q.keyId] || getCurrentKey();
 
-    document.getElementById('exerciseNumber').textContent = 'Quiz';
-    document.getElementById('exerciseTitle').textContent = 'Name the Second Note';
-    document.getElementById('exercisePrompt').textContent =
-      'Listen to the exercise and read the staff. Identify the letter name of the second note (the note on beat 2). You can replay as many times as you like before guessing.';
-    document.getElementById('navStatus').textContent = `Quiz mode · ${key.displayName}`;
+    document.getElementById('exerciseNumber').textContent  = 'Quiz';
+    document.getElementById('exerciseTitle').textContent   = 'Name the Second Note';
+    document.getElementById('exercisePrompt').textContent  =
+      'Listen and read the staff. Identify the letter name of the second note (beat 2). Replay as many times as you like.';
+    document.getElementById('navStatus').textContent       = `Quiz · ${key.displayName}`;
 
-    const clefName = q.clef === 'treble' ? 'Treble clef' : 'Bass clef';
-    const ariaDesc = `${clefName}, key of ${key.displayName}, 3/4 time. An exercise to listen to and identify the second note by its letter name.`;
-    document.getElementById('staveContainer').setAttribute('aria-label', ariaDesc);
+    const clefName = q.clef === 'bass' ? 'Bass clef' : 'Treble clef';
+    document.getElementById('staveContainer').setAttribute('aria-label',
+      `${clefName}, key of ${key.displayName}. Identify the second note.`);
 
     renderStaff(q.pitches, q.clef, key);
-
-    quizAttempts = 0;
-    quizComplete = false;
+    quizAttempts = 0; quizComplete = false;
     renderNoteGrid();
     hideQuizStatus();
-
     document.getElementById('prevBtn').disabled = true;
     document.getElementById('nextBtn').disabled = false;
   }
 
   function renderExercise() {
-    if (currentActivity === 'learn') {
-      renderLearnExercise();
-    } else {
-      renderQuizExercise();
-    }
+    if (currentActivity === 'learn') renderLearnExercise();
+    else renderQuizExercise();
   }
 
-  // ============ QUIZ NOTE GRID ============
+  // ============================================================
+  // QUIZ NOTE GRID
+  // ============================================================
   function renderNoteGrid() {
     const grid = document.getElementById('intervalGrid');
     grid.innerHTML = '';
@@ -1498,96 +1547,78 @@
       btn.className = 'interval-btn';
       btn.dataset.noteId = note.id;
       btn.textContent = note.label;
-      btn.setAttribute('aria-label', `Select ${note.label.replace('♯', ' sharp').replace('♭', ' flat')}`);
+      btn.setAttribute('aria-label',
+        `Select ${note.label.replace('♯',' sharp').replace('♭',' flat')}`);
       btn.addEventListener('click', () => handleQuizGuess(note.id, btn));
       grid.appendChild(btn);
     });
   }
 
-  function handleQuizGuess(guessedNoteId, btnEl) {
+  function handleQuizGuess(guessedId, btnEl) {
     if (!currentQuiz || quizComplete) return;
-
-    const correctNoteId = pitchToNoteId(currentQuiz.pitches[1]);
-    const guessedNote = getNoteChoiceById(guessedNoteId);
-    const correctNote = getNoteChoiceById(correctNoteId);
-
-    // Always play the user's guessed note so they hear what they picked
+    const correctId   = pitchToNoteId(currentQuiz.pitches[1]);
+    const guessedNote = getNoteChoiceById(guessedId);
+    const correctNote = getNoteChoiceById(correctId);
     playGuessedNote(guessedNote);
 
-    if (guessedNoteId === correctNoteId) {
+    if (guessedId === correctId) {
       btnEl.classList.add('correct');
       btnEl.innerHTML = `<span class="icon" aria-hidden="true">✓</span> ${guessedNote.label}`;
       btnEl.setAttribute('aria-label', `Correct: ${guessedNote.label}`);
-      // Disable all buttons
       document.querySelectorAll('.interval-btn').forEach(b => b.disabled = true);
       showQuizStatus('correct',
         `<span class="icon" aria-hidden="true">✓</span> Correct! The second note is ${guessedNote.label}.`);
       quizComplete = true;
     } else {
-      // Show this guess as incorrect briefly, but reset all incorrect highlights for next attempt
-      // We'll flash it red, then clear all incorrect highlights so the next guess starts fresh visually.
       btnEl.classList.add('incorrect');
       btnEl.innerHTML = `<span class="icon" aria-hidden="true">✗</span> ${guessedNote.label}`;
       btnEl.setAttribute('aria-label', `Incorrect: ${guessedNote.label}`);
-
       quizAttempts++;
-      const remaining = MAX_QUIZ_ATTEMPTS - quizAttempts;
-
+      const rem = MAX_QUIZ_ATTEMPTS - quizAttempts;
       if (quizAttempts >= MAX_QUIZ_ATTEMPTS) {
-        // Final strike: reveal the correct answer
-        // Clear all incorrect highlights, then highlight the correct button
         clearIncorrectHighlights();
-        const correctBtn = document.querySelector(`.interval-btn[data-note-id="${correctNoteId}"]`);
-        if (correctBtn) {
-          correctBtn.classList.add('correct');
-          correctBtn.innerHTML = `<span class="icon" aria-hidden="true">✓</span> ${correctNote.label}`;
-          correctBtn.setAttribute('aria-label', `Answer: ${correctNote.label}`);
+        const cBtn = document.querySelector(`.interval-btn[data-note-id="${correctId}"]`);
+        if (cBtn) {
+          cBtn.classList.add('correct');
+          cBtn.innerHTML = `<span class="icon" aria-hidden="true">✓</span> ${correctNote.label}`;
+          cBtn.setAttribute('aria-label', `Answer: ${correctNote.label}`);
         }
         document.querySelectorAll('.interval-btn').forEach(b => b.disabled = true);
         showQuizStatus('reveal',
-          `The correct answer is <strong>${correctNote.label}</strong>. Listen to the exercise once more, then click Next to continue.`);
-        // Replay the original exercise so the user hears it with the correct note in mind
-        setTimeout(() => {
-          playNotes([currentQuiz.pitches[0], currentQuiz.pitches[1], currentQuiz.pitches], ['4n', '4n', '4n']);
-        }, 800);
+          `The answer is <strong>${correctNote.label}</strong>. Listen once more, then click Next.`);
+        setTimeout(() =>
+          playNotes([currentQuiz.pitches[0], currentQuiz.pitches[1], currentQuiz.pitches],
+                    ['4n','4n','4n']), 800);
         quizComplete = true;
       } else {
         showQuizStatus('incorrect',
-          `<span class="icon" aria-hidden="true">✗</span> Not quite — that was ${guessedNote.label}. Try again. ${remaining} ${remaining === 1 ? 'attempt' : 'attempts'} left. Listen to the original.`);
-        // After a brief moment, clear the incorrect highlights so the next guess starts fresh,
-        // then replay the original exercise
+          `<span class="icon" aria-hidden="true">✗</span> That was ${guessedNote.label}. ${rem} ${rem===1?'attempt':'attempts'} left.`);
         setTimeout(() => {
           clearIncorrectHighlights();
-          playNotes([currentQuiz.pitches[0], currentQuiz.pitches[1], currentQuiz.pitches], ['4n', '4n', '4n']);
+          playNotes([currentQuiz.pitches[0], currentQuiz.pitches[1], currentQuiz.pitches],
+                    ['4n','4n','4n']);
         }, 1100);
       }
     }
   }
 
-  // Reset all incorrect button highlights, restoring buttons to their default state.
-  // Called between guesses so each attempt starts visually fresh.
   function clearIncorrectHighlights() {
     document.querySelectorAll('.interval-btn.incorrect').forEach(btn => {
       btn.classList.remove('incorrect');
       btn.disabled = false;
-      const noteId = btn.dataset.noteId;
-      const note = getNoteChoiceById(noteId);
+      const note = getNoteChoiceById(btn.dataset.noteId);
       if (note) {
         btn.textContent = note.label;
-        btn.setAttribute('aria-label', `Select ${note.label.replace('♯', ' sharp').replace('♭', ' flat')}`);
+        btn.setAttribute('aria-label',
+          `Select ${note.label.replace('♯',' sharp').replace('♭',' flat')}`);
       }
     });
   }
 
-  // Play a single guessed note at the same octave as the correct second note.
-  // This lets the user hear what they picked (a single pitch, since this is a note-naming quiz).
-  function playGuessedNote(guessedNote) {
+  function playGuessedNote(note) {
     if (!currentQuiz) return;
-    const correctSecondPitch = currentQuiz.pitches[1];
-    const octave = correctSecondPitch.split('/')[1];
-    // Use the sharp form for playback (Tone.js/sampler accepts either)
-    const guessedPitch = `${guessedNote.sharps[0]}/${octave}`;
-    playNotes([guessedPitch], ['4n']);
+    const oct = currentQuiz.pitches[1].split('/')[1];
+    playNotes([`${note.sharps[0]}/${oct}`], ['4n']);
   }
 
   function showQuizStatus(type, html) {
@@ -1601,64 +1632,55 @@
     el.innerHTML = '';
   }
 
-  // ============ EVENT HANDLERS ============
-  document.getElementById('clef-treble').addEventListener('click', () => setClef('treble'));
-  document.getElementById('clef-bass').addEventListener('click', () => setClef('bass'));
-  function setClef(clef) {
-    currentClef = clef;
-    document.getElementById('clef-treble').classList.toggle('active', clef === 'treble');
-    document.getElementById('clef-treble').setAttribute('aria-pressed', clef === 'treble');
-    document.getElementById('clef-bass').classList.toggle('active', clef === 'bass');
-    document.getElementById('clef-bass').setAttribute('aria-pressed', clef === 'bass');
-    if (currentActivity === 'learn') renderExercise();
-    // In quiz mode, the clef is determined by the quiz exercise itself, so changing the toggle
-    // doesn't affect the current question — but the next quiz question will use the new default
+  // ============================================================
+  // EVENT HANDLERS
+  // ============================================================
+
+  // Clef
+  ['treble','bass','both'].forEach(c => {
+    document.getElementById(`clef-${c}`).addEventListener('click', () => setClef(c));
+  });
+  function setClef(c) {
+    currentClef = c;
+    ['treble','bass','both'].forEach(id => {
+      const btn = document.getElementById(`clef-${id}`);
+      btn.classList.toggle('active', id === c);
+      btn.setAttribute('aria-pressed', String(id === c));
+    });
+    if (currentActivity === 'learn') { currentLearnEx = generateLearnExercise(); renderExercise(); }
+    else renderExercise();
   }
 
-  document.getElementById('mode-a').addEventListener('click', () => setMode('A'));
-  document.getElementById('mode-b').addEventListener('click', () => setMode('B'));
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('mode-a').classList.toggle('active', mode === 'A');
-    document.getElementById('mode-a').setAttribute('aria-pressed', mode === 'A');
-    document.getElementById('mode-b').classList.toggle('active', mode === 'B');
-    document.getElementById('mode-b').setAttribute('aria-pressed', mode === 'B');
-    document.getElementById('modeHelp').textContent = mode === 'A'
-      ? 'Mode A: descending perfect intervals (P4, P5, P8) land on the same letter name as their ascending version (e.g., C down to G). Other intervals always use exact interval distance.'
-      : 'Mode B: descending intervals start on the root and move down by the interval distance.';
-    if (currentActivity === 'learn') renderExercise();
+  // Mode
+  ['A','B'].forEach(m => {
+    document.getElementById(`mode-${m.toLowerCase()}`).addEventListener('click', () => setMode(m));
+  });
+  function setMode(m) {
+    currentMode = m;
+    ['A','B'].forEach(id => {
+      const btn = document.getElementById(`mode-${id.toLowerCase()}`);
+      btn.classList.toggle('active', id === m);
+      btn.setAttribute('aria-pressed', String(id === m));
+    });
+    // mode-help text is static — describes both options, no update needed
+    if (currentActivity === 'learn') { currentLearnEx = generateLearnExercise(); renderExercise(); }
+    else renderExercise();
   }
 
-  document.getElementById('activity-learn').addEventListener('click', () => setActivity('learn'));
-  document.getElementById('activity-quiz').addEventListener('click', () => setActivity('quiz'));
-
-  document.getElementById('key-c-major').addEventListener('click', () => setKey('C-major'));
-  document.getElementById('key-g-major').addEventListener('click', () => setKey('G-major'));
-  document.getElementById('key-e-minor').addEventListener('click', () => setKey('E-minor'));
-  function setKey(keyId) {
-    currentKeyId = keyId;
-    document.getElementById('key-c-major').classList.toggle('active', keyId === 'C-major');
-    document.getElementById('key-c-major').setAttribute('aria-pressed', keyId === 'C-major');
-    document.getElementById('key-g-major').classList.toggle('active', keyId === 'G-major');
-    document.getElementById('key-g-major').setAttribute('aria-pressed', keyId === 'G-major');
-    document.getElementById('key-e-minor').classList.toggle('active', keyId === 'E-minor');
-    document.getElementById('key-e-minor').setAttribute('aria-pressed', keyId === 'E-minor');
-    if (currentActivity === 'quiz') {
-      // Generate a new quiz exercise in the new key
-      currentQuiz = generateQuizExercise();
-    }
-    renderExercise();
-  }
-  function setActivity(activity) {
-    currentActivity = activity;
-    document.getElementById('activity-learn').classList.toggle('active', activity === 'learn');
-    document.getElementById('activity-learn').setAttribute('aria-pressed', activity === 'learn');
-    document.getElementById('activity-quiz').classList.toggle('active', activity === 'quiz');
-    document.getElementById('activity-quiz').setAttribute('aria-pressed', activity === 'quiz');
-
-    const card = document.getElementById('exerciseCard');
+  // Activity
+  ['learn','quiz'].forEach(a => {
+    document.getElementById(`activity-${a}`).addEventListener('click', () => setActivity(a));
+  });
+  function setActivity(a) {
+    currentActivity = a;
+    ['learn','quiz'].forEach(id => {
+      const btn = document.getElementById(`activity-${id}`);
+      btn.classList.toggle('active', id === a);
+      btn.setAttribute('aria-pressed', String(id === a));
+    });
+    const card   = document.getElementById('exerciseCard');
     const layout = document.getElementById('quizLayout');
-    if (activity === 'quiz') {
+    if (a === 'quiz') {
       card.classList.add('quiz-active');
       layout.classList.add('quiz-active');
       currentQuiz = generateQuizExercise();
@@ -1666,74 +1688,129 @@
       card.classList.remove('quiz-active');
       layout.classList.remove('quiz-active');
       hideQuizStatus();
+      currentLearnEx = generateLearnExercise();
     }
     renderExercise();
   }
 
+  // Keys
+  ALL_KEY_IDS.forEach(keyId => {
+    const el = document.getElementById(`key-${keyId}`);
+    if (el) el.addEventListener('click', () => setKey(keyId));
+  });
+  function setKey(keyId) {
+    currentKeyId = keyId;
+    ALL_KEY_IDS.forEach(k => {
+      const el = document.getElementById(`key-${k}`);
+      if (el) {
+        el.classList.toggle('active', k === keyId);
+        el.setAttribute('aria-pressed', String(k === keyId));
+      }
+    });
+    if (currentActivity === 'quiz') currentQuiz = generateQuizExercise();
+    else currentLearnEx = generateLearnExercise();
+    renderExercise();
+  }
+
+  // Navigation
   document.getElementById('prevBtn').addEventListener('click', () => {
-    if (currentActivity === 'learn' && currentIndex > 0) {
-      currentIndex--;
-      renderExercise();
-    }
+    // Both modes: generate a new exercise (prev = new random, same as next)
+    if (currentActivity === 'learn') { currentLearnEx = generateLearnExercise(); renderExercise(); }
   });
   document.getElementById('nextBtn').addEventListener('click', () => {
-    if (currentActivity === 'learn') {
-      if (currentIndex < exercises.length - 1) { currentIndex++; renderExercise(); }
-    } else {
-      // Quiz mode: next generates a fresh random exercise
-      currentQuiz = generateQuizExercise();
-      renderExercise();
-    }
+    if (currentActivity === 'learn') { currentLearnEx = generateLearnExercise(); renderExercise(); }
+    else { currentQuiz = generateQuizExercise(); renderExercise(); }
   });
 
+  // Audio
   document.getElementById('playBtn').addEventListener('click', () => {
-    const pitches = getCurrentPitches();
-    playNotes([pitches[0], pitches[1], pitches], ['4n', '4n', '4n']);
+    const p = getCurrentPitches();
+    playNotes([p[0], p[1], p], ['4n','4n','4n']);
   });
   document.getElementById('playRootBtn').addEventListener('click', () => {
-    const pitches = getCurrentPitches();
-    playNotes([pitches[0]], ['4n']);
+    playNotes([getCurrentPitches()[0]], ['4n']);
   });
   document.getElementById('playSecondBtn').addEventListener('click', () => {
-    const pitches = getCurrentPitches();
-    playNotes([pitches[1]], ['4n']);
+    playNotes([getCurrentPitches()[1]], ['4n']);
   });
   document.getElementById('playHarmonicBtn').addEventListener('click', () => {
-    const pitches = getCurrentPitches();
-    playNotes([pitches], ['2n']);
+    playNotes([getCurrentPitches()], ['2n']);
   });
 
-  // Reveal Notes — Learn mode only. Shows the note names, interval, and key context.
+  // Reveal Notes
   document.getElementById('revealNotesBtn').addEventListener('click', () => {
-    if (currentActivity !== 'learn') return;
-    const ex = exercises[currentIndex];
-    const key = getCurrentKey();
+    if (currentActivity !== 'learn' || !currentLearnEx) return;
+    const ex     = currentLearnEx;
+    const key    = KEYS[ex.keyId] || getCurrentKey();
     const pitches = getCurrentPitches();
-    const note1 = pitchToReadable(pitches[0]);
-    const note2 = pitchToReadable(pitches[1]);
-    const dirText = ex.direction === 'asc' ? 'ascending' : 'descending';
-    const isPerfectDesc = ex.direction === 'desc' && getIntervalById(ex.intervalId).perfect;
-    const modeNote = isPerfectDesc ? ` (Mode ${currentMode})` : '';
-
-    const content = document.getElementById('revealContent');
-    content.innerHTML = `
-      <div class="row"><span class="row-label">Notes</span><span class="row-value">${note1} → ${note2}</span></div>
-      <div class="row"><span class="row-label">Interval</span><span class="row-value">${ex.intervalName} ${dirText}${modeNote}</span></div>
-      <div class="row"><span class="row-label">Key</span><span class="row-value">${key.displayName}</span></div>
-    `;
+    const isPerfDesc = ex.direction === 'desc' && getIntervalById(ex.intervalId).perfect;
+    const modeLabel = isPerfDesc
+      ? ` (${currentMode === 'A' ? 'Root Relative' : 'Exact Distance'})`
+      : '';
+    document.getElementById('revealContent').innerHTML = `
+      <div class="row">
+        <span class="row-label">Notes</span>
+        <span class="row-value">${pitchToReadable(pitches[0])} → ${pitchToReadable(pitches[1])}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Interval</span>
+        <span class="row-value">${ex.intervalName} ${ex.direction === 'asc' ? 'ascending' : 'descending'}${modeLabel}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Key</span>
+        <span class="row-value">${key.displayName}</span>
+      </div>`;
     document.getElementById('revealPanel').classList.remove('hidden');
-
-    playNotes([pitches[0], pitches[1], pitches], ['4n', '4n', '4n']);
+    playNotes([pitches[0], pitches[1], pitches], ['4n','4n','4n']);
   });
-
-  // Replay from inside the reveal panel — plays the same sequence again
   document.getElementById('replayRevealBtn').addEventListener('click', () => {
-    const pitches = getCurrentPitches();
-    playNotes([pitches[0], pitches[1], pitches], ['4n', '4n', '4n']);
+    const p = getCurrentPitches();
+    playNotes([p[0], p[1], p], ['4n','4n','4n']);
   });
 
-  // ============ INIT ============
+  // Interval filter
+  const IV_IDS = ['all','m2','M2','m3','M3','P4','TT','P5','m6','M6','m7','M7','P8'];
+  IV_IDS.forEach(id => {
+    const el = document.getElementById(`ivf-${id}`);
+    if (el) el.addEventListener('click', () => setIntervalFilter(id));
+  });
+  function setIntervalFilter(id) {
+    currentIntervalId = id;
+    IV_IDS.forEach(k => {
+      const el = document.getElementById(`ivf-${k}`);
+      if (el) {
+        el.classList.toggle('active', k === id);
+        el.setAttribute('aria-pressed', String(k === id));
+      }
+    });
+    // In quiz mode, immediately generate a new exercise with the new filter
+    currentLearnEx = generateLearnExercise();
+    if (currentActivity === 'quiz') currentQuiz = generateQuizExercise();
+    renderExercise();
+  }
+
+  // Direction
+  ['asc','desc','both'].forEach(d => {
+    document.getElementById(`dir-${d}`).addEventListener('click', () => setDirection(d));
+  });
+  function setDirection(d) {
+    currentDirection = d;
+    ['asc','desc','both'].forEach(id => {
+      const btn = document.getElementById(`dir-${id}`);
+      btn.classList.toggle('active', id === d);
+      btn.setAttribute('aria-pressed', String(id === d));
+    });
+    currentLearnEx = generateLearnExercise();
+    if (currentActivity === 'quiz') currentQuiz = generateQuizExercise();
+    renderExercise();
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  currentLearnEx = generateLearnExercise();
   renderExercise();
+  renderNoteReference();
 </script>
 </body>
 </html>

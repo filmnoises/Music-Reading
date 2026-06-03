@@ -11,38 +11,64 @@ trains the same underlying skill (interval and chord recognition)
 through audio alone. Use the two together as paired tools for the
 same musicianship.
 
-## What's in this release (v0.1.0)
+## What's in this release (v0.2.0)
 
-Level 1: Intervals from minor 2nd through octave, in three keys:
+All twelve intervals (minor 2nd through octave) across fourteen keys,
+with full control over clef, direction, and interval type.
 
-- **C major** — no accidentals; the simplest starting point
-- **G major** — one sharp (F♯)
-- **E minor** — relative minor of G major, same key signature
+### Keys — circle of fifths
 
-Both **treble and bass clefs** are supported. Each exercise plays the
-root note, the second note, then both together — mirroring how a
-musician would practice an interval at an instrument.
+Keys are arranged in circle of fifths order. Each major key is paired
+with its relative minor (same key signature):
 
-Two activity modes:
+| Major | Relative minor | Accidentals |
+|-------|---------------|-------------|
+| C major | A minor | none |
+| G major | E minor | 1 sharp (F♯) |
+| D major | B minor | 2 sharps |
+| A major | F♯ minor | 3 sharps |
+| E major | C♯ minor | 4 sharps |
+| F major | D minor | 1 flat (B♭) |
+| B♭ major | G minor | 2 flats |
 
-- **Learn** — exercises are presented with the answer visible, for
-  exploration and pattern recognition.
-- **Quiz** — the second note is hidden; you identify it by clicking
-  the correct note name. Three attempts before the answer is revealed.
+### Clef
+
+Treble, Bass, or **Both** (grand staff view — the layout pianists read
+from). Audio always plays the treble-clef octave; the bass staff shows
+the same interval one octave lower for visual reference.
+
+### Note Reference
+
+A collapsible panel shows every natural note on both staves with
+letter-name labels — a visual guide for absolute beginners learning to
+orient on the staff. Ledger-line notes are highlighted in gold.
+
+### Activity modes
+
+- **Learn** — interval and both notes are shown; the exercise plays
+  automatically. Use Reveal Notes to confirm the note names and
+  interval. Press Next for a new exercise.
+- **Quiz** — the second note is hidden. Identify it by clicking the
+  correct note name. Three attempts before the answer is revealed.
+
+### Exercise controls
+
+- **Direction** — Ascending, Descending, or Both.
+- **Interval** — All, or lock to any single interval (m2 through P8).
+- **Descending Perfect Intervals** — affects P4, P5, and octave only:
+  - *Root Relative* — same note going up and down (C–G in both
+    directions). The interval inverts but stays in key. Recommended
+    for sight-singing and beginners.
+  - *Exact Distance* — same number of semitones in both directions
+    (C up to G, C down to F). Used for Circle of Fifths thinking.
 
 ## Future releases
 
-New keys will be added one major/minor pair at a time, climbing the
-circle of fifths. Each release adds one accidental's worth of new
-material:
+- **v0.3.0** — D major / B minor (2 sharps)
+- **v0.4.0** — F major / D minor (1 flat), opening the flat side
+- Additional content levels: triads, seventh chords, scales
 
-- **v0.2.0** (planned) — A minor (relative minor of C major, no accidentals)
-- **v0.3.0** (planned) — F major + D minor (one flat)
-- **v0.4.0** (planned) — D major + B minor (two sharps)
-- ... and so on.
-
-See [CHANGELOG.md](CHANGELOG.md) for full version history and the
-`[Unreleased]` section for planned work.
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
 ## Built on
 
@@ -56,19 +82,17 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history and the
 ## Accessibility
 
 This is a sight-reading trainer — its purpose is developing visual
-recognition of music notation. The app's interactive controls (clef
-toggle, key selector, mode toggle, quiz buttons, audio controls) are
-fully keyboard-navigable and screen-reader friendly. The staff itself,
-however, is not designed to be read aloud, since doing so would
-defeat the purpose of the visual quizzes.
+recognition of music notation. All interactive controls are fully
+keyboard-navigable and screen-reader friendly. The staff itself is not
+announced audibly, since doing so would defeat the purpose of the
+visual quizzes.
 
-If you can't read music notation visually, our companion app
+If you can't read notation visually, the companion
 [Ear Trainer](https://filmnoises.github.io/Ear-Training/) trains the
-same underlying skill (interval and chord recognition) through audio
-alone.
+same underlying skills through audio alone.
 
 ## License
 
 This app's code is released under the MIT License. See [LICENSE](LICENSE)
-for details. (Third-party libraries are listed in the Attribution
-section of the app and retain their own licenses.)
+for details. Third-party libraries retain their own licenses (listed
+in the Attribution section of the app).
