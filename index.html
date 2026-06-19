@@ -479,20 +479,28 @@
   }
   .interval-btn .icon { font-weight: 700; font-size: 1rem; }
 
-  /* ── QUIZ STATUS ── */
-  .quiz-status {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.86rem;
-    border-left: 3px solid var(--border2);
-    background: var(--surface2);
+  /* ── QUIZ STATUS ──
+     Sits directly under the staff. Only shown in quiz mode. In quiz mode the
+     box always reserves its vertical space (even while empty) so the Play
+     buttons below it never shift when an answer appears. The reserved height
+     fits up to two lines of text, which covers the longest message. */
+  .quiz-status { display: none; }
+  .quiz-active .quiz-status {
+    display: flex;
+    align-items: center;
+    min-height: 4rem;                     /* reserve space so Play buttons stay put */
+    box-sizing: border-box;
+    padding: 0.6rem 0.9rem;
+    font-size: 1rem;                      /* slightly larger than before (was 0.86rem) */
+    border-left: 3px solid transparent;   /* invisible while empty */
+    background: transparent;
     margin-top: 0.65rem;
-    line-height: 1.5;
+    line-height: 1.4;
   }
-  .quiz-status.correct { background: var(--green-bg); border-left-color: var(--green); color: var(--green-ink); }
-  .quiz-status.incorrect { background: var(--red-bg); border-left-color: var(--red); color: var(--red-ink); }
-  .quiz-status.reveal { background: var(--gold-bg); border-left-color: var(--accent-dim); color: var(--gold-ink); }
-  .quiz-status.hidden { display: none; }
-  .quiz-status .icon { font-weight: 700; margin-right: 0.25rem; }
+  .quiz-active .quiz-status.correct   { background: var(--green-bg); border-left-color: var(--green); color: var(--green-ink); }
+  .quiz-active .quiz-status.incorrect { background: var(--red-bg);   border-left-color: var(--red);   color: var(--red-ink); }
+  .quiz-active .quiz-status.reveal    { background: var(--gold-bg);  border-left-color: var(--accent-dim); color: var(--gold-ink); }
+  .quiz-status .icon { font-weight: 700; margin-right: 0.3rem; }
 
   .exercise.quiz-active .description { display: none; }
 
@@ -811,6 +819,8 @@
       <div class="quiz-stave-wrapper">
         <div id="staveContainer" class="stave-container" role="img" aria-label=""></div>
 
+        <div class="quiz-status" id="quizStatus" role="status" aria-live="polite"></div>
+
         <div class="audio-controls">
           <button id="playBtn"       type="button" disabled>▶ Play Exercise</button>
           <button id="playRootBtn"   class="secondary" type="button" disabled>Play Root</button>
@@ -831,7 +841,6 @@
       <div class="quiz-grid-wrapper" id="quizGridWrapper">
         <p class="quiz-grid-label">Select the second note</p>
         <div class="interval-grid" id="intervalGrid" role="group" aria-label="Note choices"></div>
-        <div class="quiz-status hidden" id="quizStatus" role="status" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -1051,11 +1060,15 @@
   function pickRandomRootOctave(direction, interval, clef, key) {
     const tonicBase = key.tonicLetter.charAt(0);
     const tonicSemi = LETTER_SEMITONES[tonicBase] || 0;
-    // Treble: root from A3 (lo=45) to C6 (hi=72), so both notes in A3–C6 range
-    // Bass: root from C2 (lo=24) to E4 (hi=64), both notes in C2–E4 range
+    // Note ranges run from two ledger lines BELOW the staff up to the space
+    // ABOVE the second ledger line above the staff (teacher-tester request).
+    // Treble: root from A3 (lo=45) up to D6 (hi=74 = space above 2nd ledger).
+    // Bass:   root from C2 (lo=24) up to F4 (hi=53 = space above 2nd ledger).
+    // Both notes of the interval must fall inside these bounds; in a few keys
+    // an interval near the ceiling won't fit a full octave, which is expected.
     const bounds = clef === 'treble'
-      ? { lo: 45, hi: 72 }
-      : { lo: 24, hi: 64 };
+      ? { lo: 45, hi: 74 }
+      : { lo: 24, hi: 53 };
     const cands = [];
     for (let o = 1; o <= 6; o++) {
       const rAbs = o * 12 + tonicSemi;
@@ -1559,6 +1572,7 @@
     const correctId   = pitchToNoteId(currentQuiz.pitches[1]);
     const guessedNote = getNoteChoiceById(guessedId);
     const correctNote = getNoteChoiceById(correctId);
+    const dirWord     = currentQuiz.direction === 'asc' ? 'ascending' : 'descending';
     playGuessedNote(guessedNote);
 
     if (guessedId === correctId) {
@@ -1567,7 +1581,7 @@
       btnEl.setAttribute('aria-label', `Correct: ${guessedNote.label}`);
       document.querySelectorAll('.interval-btn').forEach(b => b.disabled = true);
       showQuizStatus('correct',
-        `<span class="icon" aria-hidden="true">✓</span> Correct! The second note is ${guessedNote.label}.`);
+        `<span class="icon" aria-hidden="true">✓</span> Correct! The second note is ${guessedNote.label} — ${currentQuiz.intervalName}, ${dirWord}.`);
       quizComplete = true;
     } else {
       btnEl.classList.add('incorrect');
@@ -1585,7 +1599,7 @@
         }
         document.querySelectorAll('.interval-btn').forEach(b => b.disabled = true);
         showQuizStatus('reveal',
-          `The answer is <strong>${correctNote.label}</strong>. Listen once more, then click Next.`);
+          `The answer is <strong>${correctNote.label}</strong> — ${currentQuiz.intervalName}, ${dirWord}. Listen once more, then click Next.`);
         setTimeout(() =>
           playNotes([currentQuiz.pitches[0], currentQuiz.pitches[1], currentQuiz.pitches],
                     ['4n','4n','4n']), 800);
@@ -1627,8 +1641,10 @@
     el.innerHTML = html;
   }
   function hideQuizStatus() {
+    // In quiz mode the box stays in place (reserved, empty) so the Play
+    // buttons don't move; in learn mode CSS hides it entirely.
     const el = document.getElementById('quizStatus');
-    el.className = 'quiz-status hidden';
+    el.className = 'quiz-status';
     el.innerHTML = '';
   }
 

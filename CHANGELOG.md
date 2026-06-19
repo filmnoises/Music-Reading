@@ -22,6 +22,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] — 2026-06-18
+
+Patch release. Fixes the note-range ceiling, extends the usable range
+upward at a music-teacher tester's suggestion, and improves the quiz
+answer feedback box.
+
+### Fixed
+
+- **Bass-clef note range over-shoot.** The bass upper bound was set to
+  semitone `64`, which is E5 — about five ledger lines above the bass
+  staff — not the E4 the code comment intended. High-tonic keys could
+  place notes absurdly high above the staff. Corrected as part of the
+  range change below.
+
+### Changed — note ranges
+
+- **Upper range now reaches the space above the second ledger line**
+  above the staff, in every key and both clefs (music-teacher tester
+  request). Treble tops out at D6, bass at F4. Lower bounds are
+  unchanged (treble A3, bass C2 — two ledger lines below the staff).
+- In a few keys an interval near the new ceiling won't complete a full
+  octave because the upper note would fall outside the range; that
+  exercise is simply not generated. This is expected and accepted.
+- All 14 keys verified to retain at least two valid starting octaves
+  and to reach the new top note.
+
+### Changed — quiz answer feedback
+
+- **"Correct!" box now names the interval and direction** after the
+  note, to reinforce interval recognition alongside note reading —
+  e.g. "Correct! The second note is G — Perfect 5th, ascending." The
+  reveal message (shown after three misses) was updated to match.
+- **Box moved directly beneath the staff** (previously sat under the
+  note-choice grid in the right column) and **enlarged** slightly
+  (font 0.86rem → 1rem, more padding).
+- **Reserved space, no layout shift.** In quiz mode the box always
+  occupies its vertical space — empty and invisible before an answer,
+  filled and colored after — so the Play buttons below it never jump
+  when feedback appears. In learn mode the box is hidden entirely (no
+  empty gap).
+
+### Files in this release
+
+- `index.html` — full app (single file)
+- `CHANGELOG.md` — this file
+
+### What to test in v0.2.1
+
+**Note ranges**
+- [ ] In each clef and several keys, the highest notes reach the space
+  just above the second ledger line above the staff (treble ~D6,
+  bass ~F4) and go no higher.
+- [ ] No notes appear three or more ledger lines above the staff.
+- [ ] Lowest notes still reach about two ledger lines below the staff.
+
+**Quiz feedback box**
+- [ ] Box appears directly under the staff, not under the note grid.
+- [ ] Correct answer reads "… is X — [interval], [ascending/
+  descending]." with the right interval and direction.
+- [ ] After three misses, the reveal message also shows interval and
+  direction.
+- [ ] Before answering (quiz mode), the empty box reserves space and
+  the Play buttons do not move when an answer is submitted.
+- [ ] In learn mode there is no empty gap under the staff.
+- [ ] Screen reader still announces the status (aria-live) in its new
+  location.
+
+---
+
 ## [0.2.0] — 2026-06-03
 
 Major feature release. Expands the key library to the full circle of
